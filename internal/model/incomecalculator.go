@@ -72,7 +72,7 @@ func (calculator *IncomeCalculator) CalcPercentForOneBuyHistory(buyHistory db.Bu
 		}
 	}
 
-	return calcRelativePercent(percent, buyHistory.Date, calculator.Amortizations[amortizationInx-1].Date)
+	return calcRelativePercent(percent, buyHistory.Date, calculator.Amortizations[amortizationInx].Date)
 }
 
 func (calculator *IncomeCalculator) recalculateCurrentCouponIfNeeded(couponInx int, buyHistory db.BuyHistory) {
