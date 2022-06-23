@@ -13,7 +13,7 @@ import (
 )
 
 // Structs for this response:
-// https://iss.moex.com/iss/engines/stock/markets/bonds/securities.json?iss.meta=off&iss.only=marketdata,securities&securities.columns=$1&marketdata.columns=$2
+// https://iss.moex.com/iss/engines/stock/markets/bonds/securities.csv?iss.meta=off&iss.only=marketdata,securities&securities.columns=$1&marketdata.columns=$2
 // $1 = SECID,SHORTNAME,COUPONVALUE,NEXTCOUPON,ACCRUEDINT,PREVPRICE,FACEVALUE,COUPONPERIOD,MINSTEP,COUPONPERCENT
 // $2 = SECID,LCURRENTPRICE
 

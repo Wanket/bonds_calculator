@@ -39,7 +39,7 @@ func loadParsedBonds() []moex.Bond {
 			SecurityPart: moex.SecurityPart{
 				ShortName:     "Кузина1P01",
 				Coupon:        60.41,
-				NextCoupon:    parseDate("2022-07-02"),
+				NextCoupon:    ParseDate("2022-07-02"),
 				AccCoupon:     38.26,
 				PrevPrice:     100.08,
 				Value:         4900,
