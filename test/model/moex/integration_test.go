@@ -19,13 +19,7 @@ func TestBondNullFields(t *testing.T) {
 	assert.NoError(err, "getting bonds")
 
 	for _, bond := range bonds {
-		assert.NotEqual(0, bond.Coupon)
-		assert.NotEqual(0, bond.AccCoupon)
-		assert.NotEqual(0, bond.PrevPrice)
-		assert.NotEqual(0, bond.Value)
-		assert.NotEqual(0, bond.CouponPeriod)
-		assert.NotEqual(0, bond.PriceStep)
-		assert.NotEqual(0, bond.CurrentPrice)
+		assert.NoError(bond.IsValid(), "checking bond")
 	}
 }
 
@@ -47,9 +41,7 @@ func TestLoadAllBondizations(t *testing.T) {
 			bondization, err := client.GetBondization(id)
 			assert.NoError(err, "getting bondization")
 
-			for _, amortization := range bondization.Amortizations {
-				assert.NotEqual(0, amortization.Value)
-			}
+			assert.NoError(bondization.IsValid(), "checking bondization")
 
 			wg.Done()
 		}(bond.Id)

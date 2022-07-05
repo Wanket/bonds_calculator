@@ -44,7 +44,7 @@ func loadParsedBonds() []moex.Bond {
 				PrevPrice:     100.08,
 				Value:         4900,
 				CouponPeriod:  30,
-				PriceStep:     60.41,
+				PriceStep:     0.01,
 				CouponPercent: datastuct.NewOptional(15.000),
 			},
 			MarketDataPart: moex.MarketDataPart{

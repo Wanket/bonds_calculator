@@ -41,6 +41,38 @@ type (
 	}
 )
 
+func (bond *Bond) IsValid() error {
+	if bond.Id == "" {
+		return fmt.Errorf("bond id is empty")
+	}
+
+	if bond.ShortName == "" {
+		return fmt.Errorf("bond short name is empty")
+	}
+
+	if bond.Coupon < 0 {
+		return fmt.Errorf("bond coupon is <= 0")
+	}
+
+	if bond.AccCoupon < 0 {
+		return fmt.Errorf("bond acc coupon is < 0")
+	}
+
+	if bond.Value <= 0 {
+		return fmt.Errorf("bond value is <= 0")
+	}
+
+	if zeroCouponRepiod, zeroNextCoupon := bond.CouponPeriod == 0, bond.NextCoupon.IsZero(); zeroCouponRepiod != zeroNextCoupon {
+		return fmt.Errorf("bond coupon period is 0 xor next coupon is zero")
+	}
+
+	if bond.PriceStep <= 0 {
+		return fmt.Errorf("bond price step is <= 0")
+	}
+
+	return nil
+}
+
 func ParseBondsCp1251(buf []byte) ([]Bond, error) {
 	decoded, err := charmap.Windows1251.NewDecoder().Bytes(buf)
 	if err != nil {
@@ -55,8 +87,7 @@ func ParseBonds(buf []byte) ([]Bond, error) {
 
 	header := ""
 
-	result := make([]Bond, 0)
-	resultMap := make(map[string]int)
+	resultMap := make(map[string]Bond)
 
 	for {
 		line, err := reader.Read()
@@ -91,11 +122,10 @@ func ParseBonds(buf []byte) ([]Bond, error) {
 			}
 
 			if _, exist := resultMap[line[0]]; !exist {
-				resultMap[line[0]] = len(result)
-				result = append(result, Bond{
+				resultMap[line[0]] = Bond{
 					Id:             line[0],
 					MarketDataPart: market,
-				})
+				}
 			}
 
 			continue
@@ -112,8 +142,18 @@ func ParseBonds(buf []byte) ([]Bond, error) {
 			return nil, err
 		}
 
-		if inx, exist := resultMap[line[0]]; exist {
-			result[inx].SecurityPart = security
+		if bond, exist := resultMap[line[0]]; exist {
+			bond.SecurityPart = security
+
+			resultMap[line[0]] = bond
+		}
+	}
+
+	var emptySecPart SecurityPart
+	result := make([]Bond, 0, len(resultMap))
+	for _, bond := range resultMap {
+		if bond.SecurityPart != emptySecPart {
+			result = append(result, bond)
 		}
 	}
 
@@ -156,7 +196,7 @@ func tryParseSecurity(line []string) (SecurityPart, error) {
 	prevPriceF, _ := prevPrice.Get()
 	value, err := strconv.ParseFloat(line[6], 64)
 	couponPeriod, err := strconv.ParseInt(line[7], 10, 64)
-	priceStep, err := strconv.ParseFloat(line[2], 64)
+	priceStep, err := strconv.ParseFloat(line[8], 64)
 	couponPercent, err := utils.ParseOptionalFloat64(line[9])
 
 	if err != nil {

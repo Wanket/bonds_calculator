@@ -5,6 +5,7 @@ import (
 	"bonds_calculator/internal/utils"
 	"bytes"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"io"
 	"time"
 )
@@ -31,6 +32,54 @@ type (
 		Value datastuct.Optional[float64]
 	}
 )
+
+func (bondization *Bondization) IsValid() error {
+	if bondization.Id == "" {
+		return fmt.Errorf("bondization id is empty")
+	}
+
+	if err := CheckAmortizations(bondization.Amortizations); err != nil {
+		return err
+	}
+
+	if err := CheckCoupons(bondization.Coupons); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func CheckAmortizations(amortizations []Amortization) error {
+	if !slices.IsSortedFunc(amortizations, func(left, right Amortization) bool {
+		return left.Date.Before(right.Date)
+	}) {
+		return fmt.Errorf("amortizations must be sorted")
+	}
+
+	for _, amortization := range amortizations {
+		if amortization.Value < 0 {
+			return fmt.Errorf("amortizations value must be > 0")
+		}
+	}
+
+	return nil
+}
+
+func CheckCoupons(coupons []Coupon) error {
+	if !slices.IsSortedFunc(coupons, func(left, right Coupon) bool {
+		return left.Date.Before(right.Date)
+	}) {
+		return fmt.Errorf("coupons must be sorted")
+	}
+
+	for _, coupon := range coupons {
+		if value, exist := coupon.Value.Get(); exist && value <= 0 {
+			return fmt.Errorf("coupons value must be > 0")
+		}
+	}
+
+	return nil
+}
 
 func ParseBondization(id string, buf []byte) (Bondization, error) {
 	reader := NewReader(bytes.NewReader(buf))
