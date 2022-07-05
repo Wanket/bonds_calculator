@@ -28,20 +28,30 @@ func NewUserCalculator(bonds []moex.Bondization, buyHistory []db.BuyHistory) Use
 	}
 }
 
-func (calculator *UserCalculator) CalcUserPercent(setting IncomeSetting) float64 {
+func (calculator *UserCalculator) CalcUserPercent(setting IncomeSetting) (float64, error) {
 	var buyCount uint
-	sumPercent := 0.0
+	var sumPercent float64
 	for _, bond := range calculator.bonds {
 		bondCalculator := NewIncomeCalculator(&bond)
 
-		for _, history := range calculator.buyHistory[bond.Id] {
-			sumPercent += bondCalculator.CalcPercentForOneBuyHistory(history, setting) * float64(history.Count)
+		histories, exist := calculator.buyHistory[bond.Id]
+		if !exist {
+			return 0, fmt.Errorf("buy histories for bond with id %s not found", bond.Id)
+		}
+
+		for _, history := range histories {
+			oneHistoryPercent, err := bondCalculator.CalcPercentForOneBuyHistory(history, setting)
+			if err != nil {
+				return 0, err
+			}
+
+			sumPercent += oneHistoryPercent * float64(history.Count)
 
 			buyCount += history.Count
 		}
 	}
 
-	return sumPercent / float64(buyCount)
+	return sumPercent / float64(buyCount), nil
 }
 
 func (calculator *UserCalculator) CalcUserPercentForOneBond(bondId string, setting IncomeSetting) (float64, error) {
@@ -50,12 +60,22 @@ func (calculator *UserCalculator) CalcUserPercentForOneBond(bondId string, setti
 		return 0, fmt.Errorf("bond with id %s not found", bondId)
 	}
 
+	histories, exist := calculator.buyHistory[bondId]
+	if !exist {
+		return 0, fmt.Errorf("buy histories for bond with id %s not found", bondId)
+	}
+
 	incomeCalculator := NewIncomeCalculator(&bond)
 
 	var buyCount uint
-	sumPercent := 0.0
-	for _, history := range calculator.buyHistory[bondId] {
-		sumPercent += incomeCalculator.CalcPercentForOneBuyHistory(history, setting) * float64(history.Count)
+	var sumPercent float64
+	for _, history := range histories {
+		oneHistoryPercent, err := incomeCalculator.CalcPercentForOneBuyHistory(history, setting)
+		if err != nil {
+			return 0, err
+		}
+
+		sumPercent += oneHistoryPercent * float64(history.Count)
 
 		buyCount += history.Count
 	}

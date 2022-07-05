@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"golang.org/x/exp/slices"
 	"io"
+	"math"
 	"time"
 )
 
@@ -33,13 +34,17 @@ type (
 	}
 )
 
-func (bondization *Bondization) IsValid() error {
+func (bondization *Bondization) IsValid(endDate time.Time) error {
 	if bondization.Id == "" {
 		return fmt.Errorf("bondization id is empty")
 	}
 
 	if err := CheckAmortizations(bondization.Amortizations); err != nil {
 		return err
+	}
+
+	if bondization.Amortizations[len(bondization.Amortizations)-1].Date != endDate {
+		return fmt.Errorf("last amortization date must be equal to end date")
 	}
 
 	if err := CheckCoupons(bondization.Coupons); err != nil {
@@ -50,6 +55,10 @@ func (bondization *Bondization) IsValid() error {
 }
 
 func CheckAmortizations(amortizations []Amortization) error {
+	if len(amortizations) == 0 {
+		return fmt.Errorf("amortizations is empty")
+	}
+
 	if !slices.IsSortedFunc(amortizations, func(left, right Amortization) bool {
 		return left.Date.Before(right.Date)
 	}) {
@@ -66,6 +75,10 @@ func CheckAmortizations(amortizations []Amortization) error {
 }
 
 func CheckCoupons(coupons []Coupon) error {
+	if len(coupons) == 0 {
+		return fmt.Errorf("coupons is empty")
+	}
+
 	if !slices.IsSortedFunc(coupons, func(left, right Coupon) bool {
 		return left.Date.Before(right.Date)
 	}) {
@@ -73,8 +86,14 @@ func CheckCoupons(coupons []Coupon) error {
 	}
 
 	for _, coupon := range coupons {
-		if value, exist := coupon.Value.Get(); exist && value <= 0 {
-			return fmt.Errorf("coupons value must be > 0")
+		if value, exist := coupon.Value.Get(); exist {
+			if value <= 0 {
+				return fmt.Errorf("coupons value must be > 0")
+			}
+
+			if math.IsNaN(value) {
+				return fmt.Errorf("coupons value must be not NaN")
+			}
 		}
 	}
 
@@ -118,7 +137,6 @@ func ParseBondization(id string, buf []byte) (Bondization, error) {
 
 		if header == "amortizations" {
 			value, exist := item.Value.Get()
-
 			if !exist {
 				return Bondization{}, fmt.Errorf("amortizations value must be not null")
 			}
@@ -130,6 +148,14 @@ func ParseBondization(id string, buf []byte) (Bondization, error) {
 		} else {
 			coupons = append(coupons, Coupon(item))
 		}
+	}
+
+	if len(amortizations) == 0 {
+		amortizations = append(amortizations, Amortization{})
+	}
+
+	if len(coupons) == 0 {
+		coupons = append(coupons, Coupon{})
 	}
 
 	return Bondization{

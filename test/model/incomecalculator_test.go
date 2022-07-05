@@ -13,7 +13,8 @@ func TestCalcMaturityOnePercent(t *testing.T) {
 	assert := asserts.New(t)
 
 	calculator := model.NewIncomeCalculator(&parsedBondization)
-	percent := calculator.CalcPercentForOneBuyHistory(buyHistory, model.Maturity)
+	percent, err := calculator.CalcPercentForOneBuyHistory(buyHistory, model.Maturity)
+	assert.NoError(err, "CalcPercentForOneBuyHistory (Maturity) calculation error")
 
 	accuracy := 0.01
 	expected := 0.124
@@ -27,7 +28,8 @@ func TestCalcCurrentOnePercent(t *testing.T) {
 	assert := asserts.New(t)
 
 	calculator := model.NewIncomeCalculator(&parsedBondization)
-	percent := calculator.CalcPercentForOneBuyHistory(buyHistory, model.Current)
+	percent, err := calculator.CalcPercentForOneBuyHistory(buyHistory, model.Current)
+	assert.NoError(err, "CalcPercentForOneBuyHistory (Current) calculation error")
 
 	accuracy := 0.01
 	expected := 0.1415
@@ -41,7 +43,8 @@ func TestCalcMultiBuyPercent(t *testing.T) {
 	assert := asserts.New(t)
 
 	calculator := model.NewIncomeCalculator(&parsedBondization)
-	percent := calculator.CalcPercent(multiplyBuyHistory, model.Maturity)
+	percent, err := calculator.CalcPercent(multiplyBuyHistory, model.Maturity)
+	assert.NoError(err, "CalcPercent (MultiBuyHistory) calculation error")
 
 	accuracy := 0.01
 	expected := 0.14214
@@ -58,7 +61,8 @@ func TestCalcVariablePercent(t *testing.T) {
 	bondizations, _ := moex.ParseBondization(bonds[0].Id, bondizationVariableData)
 
 	calculator := model.NewIncomeCalculator(&bondizations)
-	percent := calculator.CalcPercentForOneBuyHistory(buyHistoryVariable, model.Maturity)
+	percent, err := calculator.CalcPercentForOneBuyHistory(buyHistoryVariable, model.Maturity)
+	assert.NoError(err, "CalcPercentForOneBuyHistory (Variable) calculation error")
 
 	accuracy := 0.01
 	expected := 0.065
@@ -69,7 +73,7 @@ func TestCalcVariablePercent(t *testing.T) {
 func BenchmarkCalcPercent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		calculator := model.NewIncomeCalculator(&parsedBondization)
-		calculator.CalcPercentForOneBuyHistory(buyHistory, model.Maturity)
+		_, _ = calculator.CalcPercentForOneBuyHistory(buyHistory, model.Maturity)
 	}
 
 	b.ReportAllocs()

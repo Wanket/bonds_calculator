@@ -17,12 +17,13 @@ func TestCalcUserPercent(t *testing.T) {
 	assert := asserts.New(t)
 
 	calculator := model.NewUserCalculator(userBondization, userBuyHistory)
-	percent := calculator.CalcUserPercent(model.Maturity)
+	percent, err := calculator.CalcUserPercent(model.Maturity)
+	assert.NoError(err, "CalcUserPercent calculation error")
 
 	accuracy := 0.01
 	expected := 0.125
 
-	assert.InDelta(expected, percent, accuracy)
+	assert.InDelta(expected, percent, accuracy, "CalcUserPercent calculation error")
 }
 
 func TestCalcUserPercentForOneBond(t *testing.T) {
@@ -31,19 +32,19 @@ func TestCalcUserPercentForOneBond(t *testing.T) {
 	calculator := model.NewUserCalculator(userBondization, userBuyHistory)
 	percent, err := calculator.CalcUserPercentForOneBond(parsedBondization.Id, model.Maturity)
 
-	assert.NoError(err)
+	assert.NoError(err, "CalcUserPercentForOneBond calculation error")
 
 	accuracy := 0.01
 	expected := 0.134
 
-	assert.InDelta(expected, percent, accuracy)
+	assert.InDelta(expected, percent, accuracy, "CalcUserPercentForOneBond calculation error")
 }
 
 func BenchmarkCalcUserPercent(b *testing.B) {
 	calculator := model.NewUserCalculator(userBondization, userBuyHistory)
 
 	for i := 0; i < b.N; i++ {
-		calculator.CalcUserPercent(model.Maturity)
+		_, _ = calculator.CalcUserPercent(model.Maturity)
 	}
 
 	b.ReportAllocs()

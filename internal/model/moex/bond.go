@@ -14,7 +14,7 @@ import (
 
 // Structs for this response:
 // https://iss.moex.com/iss/engines/stock/markets/bonds/securities.csv?iss.meta=off&iss.only=marketdata,securities&securities.columns=$1&marketdata.columns=$2
-// $1 = SECID,SHORTNAME,COUPONVALUE,NEXTCOUPON,ACCRUEDINT,PREVPRICE,FACEVALUE,COUPONPERIOD,MINSTEP,COUPONPERCENT
+// $1 = SECID,SHORTNAME,COUPONVALUE,NEXTCOUPON,ACCRUEDINT,PREVPRICE,FACEVALUE,COUPONPERIOD,MINSTEP,COUPONPERCENT,MATDATE
 // $2 = SECID,LCURRENTPRICE
 
 type (
@@ -34,6 +34,7 @@ type (
 		CouponPeriod  uint
 		PriceStep     float64
 		CouponPercent datastuct.Optional[float64]
+		EndDate       time.Time
 	}
 
 	MarketDataPart struct {
@@ -180,13 +181,18 @@ func tryParseMarketData(line []string) (MarketDataPart, error) {
 }
 
 func tryParseSecurity(line []string) (SecurityPart, error) {
-	if len(line) != 10 {
+	if len(line) != 11 {
 		return SecurityPart{}, fmt.Errorf("wrong Security data line len %d", len(line))
 	}
 
 	prevPrice, err := utils.ParseOptionalFloat64(line[5])
 	if _, exist := prevPrice.Get(); !exist && err == nil {
 		return SecurityPart{}, skipError
+	}
+
+	endDate, err := time.Parse("2006-01-02", line[10])
+	if err != nil && line[10] == "0000-00-00" {
+		endDate = time.Time{}
 	}
 
 	shortName := line[1]
@@ -213,5 +219,6 @@ func tryParseSecurity(line []string) (SecurityPart, error) {
 		CouponPeriod:  uint(couponPeriod),
 		PriceStep:     priceStep,
 		CouponPercent: couponPercent,
+		EndDate:       endDate,
 	}, nil
 }

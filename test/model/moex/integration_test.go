@@ -5,6 +5,7 @@ import (
 	asserts "github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestBondNullFields(t *testing.T) {
@@ -37,14 +38,14 @@ func TestLoadAllBondizations(t *testing.T) {
 	wg.Add(len(bonds))
 
 	for _, bond := range bonds {
-		go func(id string) {
+		go func(id string, endDate time.Time) {
 			bondization, err := client.GetBondization(id)
 			assert.NoError(err, "getting bondization")
 
-			assert.NoError(bondization.IsValid(), "checking bondization")
+			assert.NoError(bondization.IsValid(endDate), "checking bondization")
 
 			wg.Done()
-		}(bond.Id)
+		}(bond.Id, bond.EndDate)
 	}
 
 	wg.Wait()
