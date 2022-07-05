@@ -2,6 +2,7 @@ package api
 
 import (
 	"bonds_calculator/internal/model/moex"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -19,22 +20,31 @@ type MoexClient struct {
 
 	workQueue chan worker
 
-	isClosedChan chan struct{}
+	context context.Context
+	cancel  context.CancelFunc
 }
 
 func NewMoexClient(queueSize int) MoexClient {
+	return NewMoexClientWithContext(queueSize, context.Background())
+}
+
+func NewMoexClientWithContext(queueSize int, ctx context.Context) MoexClient {
+	ctx, cancel := context.WithCancel(ctx)
 	client := MoexClient{
-		workQueue:    make(chan worker, queueSize),
-		isClosedChan: make(chan struct{}),
+		workQueue: make(chan worker, queueSize),
+		context:   ctx,
+		cancel:    cancel,
 	}
 
-	go queueListener(client)
+	for i := 0; i < queueSize; i++ {
+		go queueListener(client)
+	}
 
 	return client
 }
 
 func (client *MoexClient) Close() error {
-	close(client.isClosedChan)
+	client.cancel()
 
 	return nil
 }
@@ -63,7 +73,7 @@ func queueListener(client MoexClient) {
 		select {
 		case worker := <-client.workQueue:
 			worker.work(client)
-		case <-client.isClosedChan:
+		case <-client.context.Done():
 			return
 		}
 	}
