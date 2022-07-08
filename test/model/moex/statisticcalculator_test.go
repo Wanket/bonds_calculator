@@ -10,6 +10,8 @@ import (
 )
 
 func TestCalcStatisticByDate(t *testing.T) {
+	t.Parallel()
+
 	income := []db.Income{
 		{Date: time.Date(2018, time.January, 1, 0, 0, 0, 0, time.UTC), Value: 11},
 		{Date: time.Date(2018, time.January, 2, 0, 0, 0, 0, time.UTC), Value: 22},

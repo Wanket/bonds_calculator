@@ -14,6 +14,8 @@ var (
 )
 
 func TestCalcUserPercent(t *testing.T) {
+	t.Parallel()
+
 	assert := asserts.New(t)
 
 	userCalculator := calculator.NewUserCalculator(userBondization, userBuyHistory)
@@ -27,6 +29,8 @@ func TestCalcUserPercent(t *testing.T) {
 }
 
 func TestCalcUserPercentForOneBond(t *testing.T) {
+	t.Parallel()
+
 	assert := asserts.New(t)
 
 	userCalculator := calculator.NewUserCalculator(userBondization, userBuyHistory)

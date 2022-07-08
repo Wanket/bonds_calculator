@@ -8,6 +8,8 @@ import (
 )
 
 func TestBondSearcher(t *testing.T) {
+	t.Parallel()
+
 	bonds := []moex.Bond{
 		{
 			Id: "FBND",
