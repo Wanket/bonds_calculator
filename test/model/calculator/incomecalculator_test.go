@@ -1,7 +1,7 @@
-package model
+package calculator
 
 import (
-	"bonds_calculator/internal/model"
+	"bonds_calculator/internal/model/calculator"
 	"bonds_calculator/internal/model/moex"
 	asserts "github.com/stretchr/testify/assert"
 	"testing"
@@ -12,8 +12,8 @@ func TestCalcMaturityOnePercent(t *testing.T) {
 
 	assert := asserts.New(t)
 
-	calculator := model.NewIncomeCalculator(&parsedBondization)
-	percent, err := calculator.CalcPercentForOneBuyHistory(buyHistory, model.Maturity)
+	incomeCalculator := calculator.NewIncomeCalculator(&parsedBondization)
+	percent, err := incomeCalculator.CalcPercentForOneBuyHistory(buyHistory, calculator.Maturity)
 	assert.NoError(err, "CalcPercentForOneBuyHistory (Maturity) calculation error")
 
 	accuracy := 0.01
@@ -27,8 +27,8 @@ func TestCalcCurrentOnePercent(t *testing.T) {
 
 	assert := asserts.New(t)
 
-	calculator := model.NewIncomeCalculator(&parsedBondization)
-	percent, err := calculator.CalcPercentForOneBuyHistory(buyHistory, model.Current)
+	incomeCalculator := calculator.NewIncomeCalculator(&parsedBondization)
+	percent, err := incomeCalculator.CalcPercentForOneBuyHistory(buyHistory, calculator.Current)
 	assert.NoError(err, "CalcPercentForOneBuyHistory (Current) calculation error")
 
 	accuracy := 0.01
@@ -42,8 +42,8 @@ func TestCalcMultiBuyPercent(t *testing.T) {
 
 	assert := asserts.New(t)
 
-	calculator := model.NewIncomeCalculator(&parsedBondization)
-	percent, err := calculator.CalcPercent(multiplyBuyHistory, model.Maturity)
+	incomeCalculator := calculator.NewIncomeCalculator(&parsedBondization)
+	percent, err := incomeCalculator.CalcPercent(multiplyBuyHistory, calculator.Maturity)
 	assert.NoError(err, "CalcPercent (MultiBuyHistory) calculation error")
 
 	accuracy := 0.01
@@ -60,8 +60,8 @@ func TestCalcVariablePercent(t *testing.T) {
 	bonds, _ := moex.ParseBondsCp1251(bondsVariableData)
 	bondizations, _ := moex.ParseBondization(bonds[0].Id, bondizationVariableData)
 
-	calculator := model.NewIncomeCalculator(&bondizations)
-	percent, err := calculator.CalcPercentForOneBuyHistory(buyHistoryVariable, model.Maturity)
+	incomeCalculator := calculator.NewIncomeCalculator(&bondizations)
+	percent, err := incomeCalculator.CalcPercentForOneBuyHistory(buyHistoryVariable, calculator.Maturity)
 	assert.NoError(err, "CalcPercentForOneBuyHistory (Variable) calculation error")
 
 	accuracy := 0.01
@@ -72,8 +72,8 @@ func TestCalcVariablePercent(t *testing.T) {
 
 func BenchmarkCalcPercent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		calculator := model.NewIncomeCalculator(&parsedBondization)
-		_, _ = calculator.CalcPercentForOneBuyHistory(buyHistory, model.Maturity)
+		incomeCalculator := calculator.NewIncomeCalculator(&parsedBondization)
+		_, _ = incomeCalculator.CalcPercentForOneBuyHistory(buyHistory, calculator.Maturity)
 	}
 
 	b.ReportAllocs()

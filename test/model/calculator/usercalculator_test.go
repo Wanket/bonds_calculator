@@ -1,7 +1,7 @@
-package model
+package calculator
 
 import (
-	"bonds_calculator/internal/model"
+	"bonds_calculator/internal/model/calculator"
 	"bonds_calculator/internal/model/db"
 	"bonds_calculator/internal/model/moex"
 	asserts "github.com/stretchr/testify/assert"
@@ -16,8 +16,8 @@ var (
 func TestCalcUserPercent(t *testing.T) {
 	assert := asserts.New(t)
 
-	calculator := model.NewUserCalculator(userBondization, userBuyHistory)
-	percent, err := calculator.CalcUserPercent(model.Maturity)
+	userCalculator := calculator.NewUserCalculator(userBondization, userBuyHistory)
+	percent, err := userCalculator.CalcUserPercent(calculator.Maturity)
 	assert.NoError(err, "CalcUserPercent calculation error")
 
 	accuracy := 0.01
@@ -29,8 +29,8 @@ func TestCalcUserPercent(t *testing.T) {
 func TestCalcUserPercentForOneBond(t *testing.T) {
 	assert := asserts.New(t)
 
-	calculator := model.NewUserCalculator(userBondization, userBuyHistory)
-	percent, err := calculator.CalcUserPercentForOneBond(parsedBondization.Id, model.Maturity)
+	userCalculator := calculator.NewUserCalculator(userBondization, userBuyHistory)
+	percent, err := userCalculator.CalcUserPercentForOneBond(parsedBondization.Id, calculator.Maturity)
 
 	assert.NoError(err, "CalcUserPercentForOneBond calculation error")
 
@@ -41,10 +41,10 @@ func TestCalcUserPercentForOneBond(t *testing.T) {
 }
 
 func BenchmarkCalcUserPercent(b *testing.B) {
-	calculator := model.NewUserCalculator(userBondization, userBuyHistory)
+	userCalculator := calculator.NewUserCalculator(userBondization, userBuyHistory)
 
 	for i := 0; i < b.N; i++ {
-		_, _ = calculator.CalcUserPercent(model.Maturity)
+		_, _ = userCalculator.CalcUserPercent(calculator.Maturity)
 	}
 
 	b.ReportAllocs()

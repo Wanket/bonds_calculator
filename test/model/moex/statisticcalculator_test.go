@@ -1,7 +1,7 @@
 package moex
 
 import (
-	"bonds_calculator/internal/model"
+	"bonds_calculator/internal/model/calculator"
 	"bonds_calculator/internal/model/datastuct"
 	"bonds_calculator/internal/model/db"
 	asserts "github.com/stretchr/testify/assert"
@@ -28,9 +28,8 @@ func TestCalcStatisticByDate(t *testing.T) {
 		{time.Date(2018, time.January, 4, 0, 0, 0, 0, time.UTC), 44},
 	}
 
-	calculator := model.NewStatisticCalculator(income)
-
-	result := calculator.CalcStatisticByDate(startDate, endDate)
+	statisticCalculator := calculator.NewStatisticCalculator(income)
+	result := statisticCalculator.CalcStatisticByDate(startDate, endDate)
 
 	asserts.Equal(t, expectedResult, result)
 }

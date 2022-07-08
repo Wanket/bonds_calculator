@@ -1,4 +1,4 @@
-package model
+package calculator
 
 import (
 	"bonds_calculator/internal/model/datastuct"

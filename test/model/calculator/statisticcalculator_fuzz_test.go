@@ -1,7 +1,7 @@
-package model
+package calculator
 
 import (
-	"bonds_calculator/internal/model"
+	"bonds_calculator/internal/model/calculator"
 	"bonds_calculator/internal/model/datastuct"
 	"bonds_calculator/internal/model/db"
 	gofuzz "github.com/google/gofuzz"
@@ -36,9 +36,8 @@ func FuzzCalcStatistic(f *testing.F) {
 			t.Skip("income is not sorted")
 		}
 
-		calculator := model.NewStatisticCalculator(income)
-
-		result := calculator.CalcStatistic()
+		statisticCalculator := calculator.NewStatisticCalculator(income)
+		result := statisticCalculator.CalcStatistic()
 
 		assert.True(slices.IsSortedFunc(result, func(left, right datastuct.Pair[time.Time, float64]) bool {
 			return left.Key.Sub(right.Key).Hours()/24 < 0
@@ -65,9 +64,8 @@ func FuzzCalcStatisticByDate(f *testing.F) {
 			t.Skip("income is not sorted")
 		}
 
-		calculator := model.NewStatisticCalculator(testData.income)
-
-		result := calculator.CalcStatisticByDate(testData.startDate, testData.endDate)
+		statisticCalculator := calculator.NewStatisticCalculator(testData.income)
+		result := statisticCalculator.CalcStatisticByDate(testData.startDate, testData.endDate)
 
 		assert.True(slices.IsSortedFunc(result, func(left, right datastuct.Pair[time.Time, float64]) bool {
 			return left.Key.Sub(right.Key).Hours()/24 < 0

@@ -1,7 +1,7 @@
-package model
+package calculator
 
 import (
-	"bonds_calculator/internal/model"
+	"bonds_calculator/internal/model/calculator"
 	"bonds_calculator/internal/model/db"
 	"bonds_calculator/internal/model/moex"
 	"bonds_calculator/test"
@@ -15,14 +15,14 @@ import (
 type fuzzCalcPercentForOneBuyHistoryTestData struct {
 	Bondization moex.Bondization
 	BuyHistory  db.BuyHistory
-	Setting     model.IncomeSetting
+	Setting     calculator.IncomeSetting
 	EndDate     time.Time
 }
 
 type fuzzCalcPercentTestData struct {
 	Bondization moex.Bondization
 	BuyHistory  []db.BuyHistory
-	Setting     model.IncomeSetting
+	Setting     calculator.IncomeSetting
 	EndDate     time.Time
 }
 
@@ -43,16 +43,16 @@ func FuzzCalcPercentForOneBuyHistory(f *testing.F) {
 			t.Skip("BuyHistory is invalid")
 		}
 
-		calculator := model.NewIncomeCalculator(&fuzzCalculatorTestData.Bondization)
+		incomeCalculator := calculator.NewIncomeCalculator(&fuzzCalculatorTestData.Bondization)
 
-		result, err := calculator.CalcPercentForOneBuyHistory(fuzzCalculatorTestData.BuyHistory, fuzzCalculatorTestData.Setting)
+		result, err := incomeCalculator.CalcPercentForOneBuyHistory(fuzzCalculatorTestData.BuyHistory, fuzzCalculatorTestData.Setting)
 
 		assert.False(err != nil && result != 0, "got error with result != 0")
 
 		assert.False(math.IsNaN(result), "result is NaN")
 		assert.GreaterOrEqual(result, 0.0)
 
-		t.Logf("result: %v", calculator)
+		t.Logf("result: %v", incomeCalculator)
 	})
 }
 
@@ -73,9 +73,9 @@ func FuzzCalcPercent(f *testing.F) {
 			t.Skip("BuyHistory is invalid")
 		}
 
-		calculator := model.NewIncomeCalculator(&fuzzCalculatorTestData.Bondization)
+		incomeCalculator := calculator.NewIncomeCalculator(&fuzzCalculatorTestData.Bondization)
 
-		result, err := calculator.CalcPercent(fuzzCalculatorTestData.BuyHistory, fuzzCalculatorTestData.Setting)
+		result, err := incomeCalculator.CalcPercent(fuzzCalculatorTestData.BuyHistory, fuzzCalculatorTestData.Setting)
 
 		assert.False(err != nil && result != 0, "got error with result != 0")
 

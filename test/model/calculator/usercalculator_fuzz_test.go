@@ -1,7 +1,7 @@
-package model
+package calculator
 
 import (
-	"bonds_calculator/internal/model"
+	"bonds_calculator/internal/model/calculator"
 	"bonds_calculator/internal/model/db"
 	"bonds_calculator/internal/model/moex"
 	"bonds_calculator/internal/utils"
@@ -16,14 +16,14 @@ import (
 type fuzzCalcUserPercentForOneBondTestData struct {
 	Bondization moex.Bondization
 	BuyHistory  []db.BuyHistory
-	Setting     model.IncomeSetting
+	Setting     calculator.IncomeSetting
 	EndDate     time.Time
 }
 
 type fuzzCalcUserPercentTestData struct {
 	Bondization []moex.Bondization
 	BuyHistory  []db.BuyHistory
-	Setting     model.IncomeSetting
+	Setting     calculator.IncomeSetting
 	EndDate     time.Time
 }
 
@@ -44,9 +44,8 @@ func FuzzCalcUserPercentForOneBond(f *testing.F) {
 			t.Skip("BuyHistory is invalid")
 		}
 
-		calculator := model.NewUserCalculator([]moex.Bondization{fuzzCalculatorTestData.Bondization}, fuzzCalculatorTestData.BuyHistory)
-
-		result, err := calculator.CalcUserPercentForOneBond(fuzzCalculatorTestData.Bondization.Id, fuzzCalculatorTestData.Setting)
+		userCalculator := calculator.NewUserCalculator([]moex.Bondization{fuzzCalculatorTestData.Bondization}, fuzzCalculatorTestData.BuyHistory)
+		result, err := userCalculator.CalcUserPercentForOneBond(fuzzCalculatorTestData.Bondization.Id, fuzzCalculatorTestData.Setting)
 
 		assert.False(err != nil && result != 0, "got error with result != 0")
 
@@ -74,9 +73,8 @@ func FuzzCalcUserPercent(f *testing.F) {
 			t.Skip("BuyHistory is invalid")
 		}
 
-		calculator := model.NewUserCalculator(fuzzCalculatorTestData.Bondization, fuzzCalculatorTestData.BuyHistory)
-
-		result, err := calculator.CalcUserPercent(fuzzCalculatorTestData.Setting)
+		userCalculator := calculator.NewUserCalculator(fuzzCalculatorTestData.Bondization, fuzzCalculatorTestData.BuyHistory)
+		result, err := userCalculator.CalcUserPercent(fuzzCalculatorTestData.Setting)
 
 		assert.False(err != nil && result != 0, "got error with result != 0")
 
