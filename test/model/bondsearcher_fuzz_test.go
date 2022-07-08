@@ -9,9 +9,9 @@ import (
 )
 
 type fuzzBondSearcherTestData struct {
-	bonds []moex.Bond
+	Bonds []moex.Bond
 
-	searchString string
+	SearchString string
 }
 
 func FuzzBondSearcher(f *testing.F) {
@@ -23,13 +23,17 @@ func FuzzBondSearcher(f *testing.F) {
 		var testData fuzzBondSearcherTestData
 		fuzzer.Fuzz(&testData)
 
-		bondsSearcher := model.NewBondSearcher(testData.bonds)
-		result := bondsSearcher.Search(testData.searchString)
+		if len(testData.SearchString) < 3 {
+			t.Skip("Search string is too short")
+		}
+
+		bondsSearcher := model.NewBondSearcher(testData.Bonds)
+		result := bondsSearcher.Search(testData.SearchString)
 
 		assert.NotNil(result)
 
 		for _, bond := range result {
-			assert.Contains(testData.bonds, bond)
+			assert.Contains(testData.Bonds, bond)
 		}
 	})
 }

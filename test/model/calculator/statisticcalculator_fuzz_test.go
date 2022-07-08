@@ -12,9 +12,9 @@ import (
 )
 
 type fuzzCalcStatisticByDateTestData struct {
-	startDate time.Time
-	endDate   time.Time
-	income    []db.Income
+	StartDate time.Time
+	EndDate   time.Time
+	Income    []db.Income
 }
 
 func FuzzCalcStatistic(f *testing.F) {
@@ -54,18 +54,18 @@ func FuzzCalcStatisticByDate(f *testing.F) {
 		var testData fuzzCalcStatisticByDateTestData
 		fuzzer.Fuzz(&testData)
 
-		if len(testData.income) == 0 {
+		if len(testData.Income) == 0 {
 			t.Skip("income is empty")
 		}
 
-		if !slices.IsSortedFunc(testData.income, func(left, right db.Income) bool {
+		if !slices.IsSortedFunc(testData.Income, func(left, right db.Income) bool {
 			return left.Date.Before(right.Date)
 		}) {
 			t.Skip("income is not sorted")
 		}
 
-		statisticCalculator := calculator.NewStatisticCalculator(testData.income)
-		result := statisticCalculator.CalcStatisticByDate(testData.startDate, testData.endDate)
+		statisticCalculator := calculator.NewStatisticCalculator(testData.Income)
+		result := statisticCalculator.CalcStatisticByDate(testData.StartDate, testData.EndDate)
 
 		assert.True(slices.IsSortedFunc(result, func(left, right datastuct.Pair[time.Time, float64]) bool {
 			return left.Key.Sub(right.Key).Hours()/24 < 0
