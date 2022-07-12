@@ -2,7 +2,7 @@ package moex
 
 import (
 	"bonds_calculator/internal/model/datastuct"
-	"bonds_calculator/internal/utils"
+	"bonds_calculator/internal/util"
 	"bytes"
 	"fmt"
 	"golang.org/x/exp/slices"
@@ -176,7 +176,7 @@ func tryParseItem(line []string) (commonItem, error) {
 	}
 
 	date, err := time.Parse("2006-01-02", line[0])
-	value, err := utils.ParseOptionalFloat64(line[1])
+	value, err := util.ParseOptionalFloat64(line[1])
 
 	if err != nil {
 		return commonItem{}, fmt.Errorf("cannot parse Bondization item %v", err)

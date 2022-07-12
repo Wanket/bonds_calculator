@@ -1,4 +1,4 @@
-package utils
+package util
 
 import (
 	"bonds_calculator/internal/model/datastuct"
@@ -23,6 +23,16 @@ func MapToSlice[K comparable, V any](m map[K]V) []datastuct.Pair[K, V] {
 
 	for k, v := range m {
 		result = append(result, datastuct.Pair[K, V]{k, v})
+	}
+
+	return result
+}
+
+func SliceToMapBy[K comparable, V any, F func(V) K](values []V, f F) map[K]V {
+	result := make(map[K]V, len(values))
+
+	for _, value := range values {
+		result[f(value)] = value
 	}
 
 	return result

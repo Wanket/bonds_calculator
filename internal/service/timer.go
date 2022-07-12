@@ -6,6 +6,14 @@ import (
 	"time"
 )
 
+//go:generate mockgen -destination=mock/timer_gen.go . ITimerService
+type ITimerService interface {
+	SubscribeEvery(duration time.Duration, callback func())
+	SubscribeEveryStartFrom(duration time.Duration, startTime time.Time, callback func())
+
+	Close() error
+}
+
 type TimerService struct {
 	context context.Context
 	cancel  context.CancelFunc
@@ -13,24 +21,24 @@ type TimerService struct {
 	clock clock.Clock
 }
 
-func NewTimer(clock clock.Clock) TimerService {
+func NewTimerService(clock clock.Clock) ITimerService {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	return TimerService{
+	return &TimerService{
 		context: ctx,
 		cancel:  cancel,
 		clock:   clock,
 	}
 }
 
-func (t *TimerService) SubscribeEvery(key int, duration time.Duration, callback func(int)) {
+func (t *TimerService) SubscribeEvery(duration time.Duration, callback func()) {
 	go func() {
 		ticker := t.clock.Ticker(duration)
 
 		for {
 			select {
 			case <-ticker.C:
-				callback(key)
+				callback()
 			case <-t.context.Done():
 				ticker.Stop()
 
@@ -40,15 +48,15 @@ func (t *TimerService) SubscribeEvery(key int, duration time.Duration, callback 
 	}()
 }
 
-func (t *TimerService) SubscribeEveryStartFrom(key int, duration time.Duration, startTime time.Time, callback func(int)) {
+func (t *TimerService) SubscribeEveryStartFrom(duration time.Duration, startTime time.Time, callback func()) {
 	go func() {
 		timer := t.clock.Timer(startTime.Sub(t.clock.Now()))
 
 		select {
 		case <-timer.C:
-			callback(key)
+			callback()
 
-			t.SubscribeEvery(key, duration, callback)
+			t.SubscribeEvery(duration, callback)
 		case <-t.context.Done():
 			timer.Stop()
 		}

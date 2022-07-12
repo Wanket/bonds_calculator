@@ -1,4 +1,4 @@
-package utils
+package util
 
 import (
 	"bonds_calculator/internal/model/datastuct"

@@ -2,7 +2,7 @@ package moex
 
 import (
 	"bonds_calculator/internal/model/datastuct"
-	"bonds_calculator/internal/utils"
+	"bonds_calculator/internal/util"
 	"bytes"
 	"errors"
 	"fmt"
@@ -185,7 +185,7 @@ func tryParseSecurity(line []string) (SecurityPart, error) {
 		return SecurityPart{}, fmt.Errorf("wrong Security data line len %d", len(line))
 	}
 
-	prevPrice, err := utils.ParseOptionalFloat64(line[5])
+	prevPrice, err := util.ParseOptionalFloat64(line[5])
 	if _, exist := prevPrice.Get(); !exist && err == nil {
 		return SecurityPart{}, skipError
 	}
@@ -203,7 +203,7 @@ func tryParseSecurity(line []string) (SecurityPart, error) {
 	value, err := strconv.ParseFloat(line[6], 64)
 	couponPeriod, err := strconv.ParseInt(line[7], 10, 64)
 	priceStep, err := strconv.ParseFloat(line[8], 64)
-	couponPercent, err := utils.ParseOptionalFloat64(line[9])
+	couponPercent, err := util.ParseOptionalFloat64(line[9])
 
 	if err != nil {
 		return SecurityPart{}, fmt.Errorf("cannot parse Security %v", err)

@@ -4,7 +4,7 @@ import (
 	"bonds_calculator/internal/model/calculator"
 	"bonds_calculator/internal/model/db"
 	"bonds_calculator/internal/model/moex"
-	"bonds_calculator/internal/utils"
+	"bonds_calculator/internal/util"
 	"bonds_calculator/test"
 	gofuzz "github.com/google/gofuzz"
 	asserts "github.com/stretchr/testify/assert"
@@ -63,7 +63,7 @@ func FuzzCalcUserPercent(f *testing.F) {
 		var fuzzCalculatorTestData fuzzCalcUserPercentTestData
 		fuzzer.Fuzz(&fuzzCalculatorTestData)
 
-		if utils.AnyOf(fuzzCalculatorTestData.Bondization, func(bondization moex.Bondization) bool {
+		if util.AnyOf(fuzzCalculatorTestData.Bondization, func(bondization moex.Bondization) bool {
 			return bondization.IsValid(fuzzCalculatorTestData.EndDate) != nil
 		}) {
 			t.Skip("Bondization is invalid")

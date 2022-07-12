@@ -5,9 +5,11 @@ go 1.18
 require (
 	github.com/benbjohnson/clock v1.3.0
 	github.com/dgryski/go-trigram v0.0.0-20160407183937-79ec494e1ad0
+	github.com/golang/mock v1.6.0
 	github.com/google/gofuzz v1.2.0
 	github.com/google/wire v0.5.0
 	github.com/peteole/testdata-loader v0.3.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/exp v0.0.0-20220706164943-b4a6d9510983
 	golang.org/x/text v0.3.7

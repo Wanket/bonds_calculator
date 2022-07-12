@@ -15,6 +15,14 @@ const (
 	allBondizationUrl = "https://iss.moex.com/iss/securities/${bond}/bondization.csv?limit=unlimited&iss.meta=off&iss.only=amortizations,coupons&amortizations.columns=amortdate,value&coupons.columns=coupondate,value"
 )
 
+//go:generate mockgen -destination=mock/moexclient_gen.go . IMoexClient
+type IMoexClient interface {
+	Close() error
+
+	GetBonds() ([]moex.Bond, error)
+	GetBondization(Id string) (moex.Bondization, error)
+}
+
 type MoexClient struct {
 	innerClient http.Client
 
@@ -24,11 +32,11 @@ type MoexClient struct {
 	cancel  context.CancelFunc
 }
 
-func NewMoexClient(queueSize int) MoexClient {
+func NewMoexClient(queueSize int) IMoexClient {
 	return NewMoexClientWithContext(queueSize, context.Background())
 }
 
-func NewMoexClientWithContext(queueSize int, ctx context.Context) MoexClient {
+func NewMoexClientWithContext(queueSize int, ctx context.Context) IMoexClient {
 	ctx, cancel := context.WithCancel(ctx)
 	client := MoexClient{
 		workQueue: make(chan worker, queueSize),
@@ -40,7 +48,7 @@ func NewMoexClientWithContext(queueSize int, ctx context.Context) MoexClient {
 		go queueListener(client)
 	}
 
-	return client
+	return &client
 }
 
 func (client *MoexClient) Close() error {

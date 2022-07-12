@@ -4,7 +4,6 @@ import (
 	"bonds_calculator/internal/service"
 	"github.com/benbjohnson/clock"
 	asserts "github.com/stretchr/testify/assert"
-	"math/rand"
 	"runtime"
 	"testing"
 	"time"
@@ -17,18 +16,15 @@ func TestTimer(t *testing.T) {
 
 	mockClock := clock.NewMock()
 
-	timer := service.NewTimer(mockClock)
-
-	generatedKey := rand.Int()
+	timer := service.NewTimerService(mockClock)
+	defer timer.Close()
 
 	doneChan := make(chan struct{})
-	timer.SubscribeEvery(generatedKey, time.Minute*5, func(key int) {
-		assert.Equal(generatedKey, key)
-
+	timer.SubscribeEvery(time.Minute*5, func() {
 		doneChan <- struct{}{}
 	})
 
-	runtime.Gosched() // let the timer service to start wait for the first tick (otherwise mockClock ignore timer`s tick)
+	runtime.Gosched()
 
 	durations := []time.Duration{
 		time.Minute * 5,
@@ -63,16 +59,15 @@ func TestTimerStartFrom(t *testing.T) {
 
 	mockClock := clock.NewMock()
 
-	timer := service.NewTimer(mockClock)
-
-	generatedKey := rand.Int()
+	timer := service.NewTimerService(mockClock)
+	defer timer.Close()
 
 	doneChan := make(chan struct{})
-	timer.SubscribeEveryStartFrom(generatedKey, time.Minute*5, mockClock.Now().Add(time.Minute), func(key int) {
-		assert.Equal(generatedKey, key)
-
+	timer.SubscribeEveryStartFrom(time.Minute*5, mockClock.Now().Add(time.Minute), func() {
 		doneChan <- struct{}{}
 	})
+
+	runtime.Gosched()
 
 	durations := []time.Duration{
 		time.Minute - 1,
@@ -89,7 +84,7 @@ func TestTimerStartFrom(t *testing.T) {
 	}
 
 	for i := 1; i < 3; i++ {
-		runtime.Gosched() // let the timer service to start wait for the first tick (otherwise mockClock ignore timer`s tick)
+		runtime.Gosched()
 
 		mockClock.Add(durations[i])
 
