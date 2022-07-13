@@ -78,6 +78,7 @@ func TestStaticStoreBondUpdating(t *testing.T) {
 	}
 
 	mockClient.EXPECT().GetBonds().Return(expectedBonds, nil)
+	mockClient.EXPECT().GetBondization(gomock.Any()).AnyTimes().Return(moex.Bondization{}, nil)
 
 	runtime.Gosched()
 

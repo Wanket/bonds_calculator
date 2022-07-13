@@ -4,6 +4,7 @@ import (
 	"bonds_calculator/internal/model"
 	"bonds_calculator/internal/model/moex"
 	asserts "github.com/stretchr/testify/assert"
+	"golang.org/x/exp/slices"
 	"testing"
 )
 
@@ -40,8 +41,19 @@ func TestBondSearcher(t *testing.T) {
 	bondsSearcher := model.NewBondSearcher(bonds)
 
 	result := bondsSearcher.Search("bonD")
-	asserts.Equal(t, bonds[0:2], result)
+	asserts.Equal(t, sortedBondsById(bonds[0:2]), sortedBondsById(result))
 
 	result = bondsSearcher.Search("BND")
-	asserts.Equal(t, bonds[0:3], result)
+	asserts.Equal(t, sortedBondsById(bonds[0:3]), sortedBondsById(result))
+}
+
+func sortedBondsById(bonds []moex.Bond) []moex.Bond {
+	copyBonds := make([]moex.Bond, len(bonds))
+	copy(copyBonds, bonds)
+
+	slices.SortFunc(copyBonds, func(left, right moex.Bond) bool {
+		return left.Id < right.Id
+	})
+
+	return copyBonds
 }

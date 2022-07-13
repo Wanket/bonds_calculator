@@ -9,14 +9,19 @@ import (
 	clock "github.com/benbjohnson/clock"
 )
 
+//go:generate mockgen -destination=mock/staticcalculator_gen.go . IStaticCalculatorService
+type IStaticCalculatorService interface {
+	CalcStaticStatisticForOneBond(bond moex.Bond, setting modelcalculator.IncomeSetting) (float64, error)
+}
+
 type StaticCalculatorService struct {
-	staticStoreService *StaticStoreService
+	staticStoreService IStaticStoreService
 
 	clock clock.Clock
 }
 
-func NewStaticCalculatorService(staticStoreService *StaticStoreService, clock clock.Clock) StaticCalculatorService {
-	return StaticCalculatorService{
+func NewStaticCalculatorService(staticStoreService IStaticStoreService, clock clock.Clock) IStaticCalculatorService {
+	return &StaticCalculatorService{
 		staticStoreService: staticStoreService,
 		clock:              clock,
 	}

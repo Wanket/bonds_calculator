@@ -2,6 +2,7 @@ package service
 
 import (
 	"bonds_calculator/internal/service"
+	"fmt"
 	"github.com/benbjohnson/clock"
 	asserts "github.com/stretchr/testify/assert"
 	"runtime"
@@ -70,8 +71,8 @@ func TestTimerStartFrom(t *testing.T) {
 	runtime.Gosched()
 
 	durations := []time.Duration{
-		time.Minute - 1,
-		1,
+		time.Minute - time.Second,
+		time.Second,
 		time.Minute * 5,
 	}
 
@@ -86,12 +87,14 @@ func TestTimerStartFrom(t *testing.T) {
 	for i := 1; i < 3; i++ {
 		runtime.Gosched()
 
+		time.Sleep(time.Millisecond) // wait for timer to register event
+
 		mockClock.Add(durations[i])
 
 		select {
 		case <-doneChan:
 		case <-time.After(time.Second):
-			assert.Fail("SubscribeEveryStartFrom timeout")
+			assert.Fail("SubscribeEveryStartFrom timeout", fmt.Sprintf("duration id: %d", i))
 		}
 	}
 }

@@ -25,8 +25,8 @@ func (box *ConcurrentCacheBox[T]) Set(value T) {
 	box.lock.Unlock()
 }
 
-func (box *ConcurrentCacheBox[T]) LockAndReadWithTime() (T, time.Time) {
-	result := box.ConcurrentBox.LockAndRead()
+func (box *ConcurrentCacheBox[T]) SafeReadWithTime() (T, time.Time) {
+	result := box.ConcurrentBox.SafeRead()
 
 	return result, box.changedTime
 }

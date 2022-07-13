@@ -21,7 +21,7 @@ func (optional *Optional[T]) Set(val T) {
 	optional.exist = true
 }
 
-func (optional Optional[T]) Empty() {
+func (optional *Optional[T]) Empty() {
 	var zero T
 	optional.val = zero
 	optional.exist = false

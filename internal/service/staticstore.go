@@ -11,6 +11,17 @@ import (
 	"time"
 )
 
+//go:generate mockgen -destination=mock/staticstore_gen.go . IStaticStoreService
+type IStaticStoreService interface {
+	GetBonds() []moex.Bond
+	GetBondsWithUpdateTime() ([]moex.Bond, time.Time)
+	GetBondById(id string) (moex.Bond, error)
+	GetBondsChangedTime() time.Time
+
+	GetBondization(id string) (moex.Bondization, error)
+	GetBondizationsChangedTime() time.Time
+}
+
 type StaticStoreService struct {
 	client api.IMoexClient
 
@@ -21,7 +32,7 @@ type StaticStoreService struct {
 	clock clock.Clock
 }
 
-func NewStaticStoreService(client api.IMoexClient, timer ITimerService, clock clock.Clock) *StaticStoreService {
+func NewStaticStoreService(client api.IMoexClient, timer ITimerService, clock clock.Clock) IStaticStoreService {
 	staticStore := StaticStoreService{
 		client: client,
 
@@ -38,15 +49,19 @@ func NewStaticStoreService(client api.IMoexClient, timer ITimerService, clock cl
 }
 
 func (staticStore *StaticStoreService) GetBonds() []moex.Bond {
-	result := staticStore.bonds.LockAndRead()
-	staticStore.bonds.UnlockRead()
+	result := staticStore.bonds.SafeRead()
 
 	return result
 }
 
+func (staticStore *StaticStoreService) GetBondsWithUpdateTime() ([]moex.Bond, time.Time) {
+	result, updateTime := staticStore.bonds.SafeReadWithTime()
+
+	return result, updateTime
+}
+
 func (staticStore *StaticStoreService) GetBondById(id string) (moex.Bond, error) {
-	result, exist := staticStore.bondsMap.LockAndRead()[id]
-	staticStore.bondsMap.UnlockRead()
+	result, exist := staticStore.bondsMap.SafeRead()[id]
 
 	if !exist {
 		return moex.Bond{}, fmt.Errorf("bond with id: %s not found", id)
@@ -56,8 +71,7 @@ func (staticStore *StaticStoreService) GetBondById(id string) (moex.Bond, error)
 }
 
 func (staticStore *StaticStoreService) GetBondization(id string) (moex.Bondization, error) {
-	result, exist := staticStore.bondizations.LockAndRead()[id]
-	staticStore.bondizations.UnlockRead()
+	result, exist := staticStore.bondizations.SafeRead()[id]
 
 	if !exist {
 		return moex.Bondization{}, fmt.Errorf("bondization with id: %s not found", id)
@@ -67,15 +81,13 @@ func (staticStore *StaticStoreService) GetBondization(id string) (moex.Bondizati
 }
 
 func (staticStore *StaticStoreService) GetBondsChangedTime() time.Time {
-	_, bondsTime := staticStore.bonds.LockAndReadWithTime()
-	staticStore.bonds.UnlockRead()
+	_, bondsTime := staticStore.bonds.SafeReadWithTime()
 
 	return bondsTime
 }
 
 func (staticStore *StaticStoreService) GetBondizationsChangedTime() time.Time {
-	_, bondizationsTime := staticStore.bondizations.LockAndReadWithTime()
-	staticStore.bondizations.UnlockRead()
+	_, bondizationsTime := staticStore.bondizations.SafeReadWithTime()
 
 	return bondizationsTime
 }

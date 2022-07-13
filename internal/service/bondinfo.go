@@ -9,11 +9,11 @@ import (
 )
 
 type BondInfoService struct {
-	staticCalculator *StaticCalculatorService
-	staticStore      *StaticStoreService
+	staticCalculator IStaticCalculatorService
+	staticStore      IStaticStoreService
 }
 
-func NewBondInfoService(staticCalculator *StaticCalculatorService, staticStore *StaticStoreService) BondInfoService {
+func NewBondInfoService(staticCalculator IStaticCalculatorService, staticStore IStaticStoreService) BondInfoService {
 	return BondInfoService{
 		staticCalculator: staticCalculator,
 		staticStore:      staticStore,

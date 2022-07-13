@@ -1,6 +1,7 @@
 package model
 
 import (
+	"bonds_calculator/internal/model/datastuct"
 	"bonds_calculator/internal/model/moex"
 	"github.com/dgryski/go-trigram"
 	"strings"
@@ -14,9 +15,10 @@ type BondSearcher struct {
 
 func NewBondSearcher(bonds []moex.Bond) BondSearcher {
 	index := trigram.NewIndex([]string{})
+
 	for _, bond := range bonds {
 		index.Add(strings.ToLower(bond.Id))
-		index.Add(strings.ToLower(bond.SecurityPart.ShortName))
+		index.Add(strings.ToLower(bond.ShortName))
 	}
 
 	return BondSearcher{
@@ -31,14 +33,14 @@ func (searcher *BondSearcher) Search(query string) []moex.Bond {
 		return make([]moex.Bond, 0)
 	}
 
-	uniqueBonds := make(map[trigram.DocID]moex.Bond, len(ids))
+	uniqueBonds := datastuct.NewSet[trigram.DocID](len(ids))
 	for _, id := range ids {
-		uniqueBonds[id/2] = searcher.bonds[id/2]
+		uniqueBonds.Add(id / 2)
 	}
 
-	bonds := make([]moex.Bond, 0, len(uniqueBonds))
-	for _, bond := range uniqueBonds {
-		bonds = append(bonds, bond)
+	bonds := make([]moex.Bond, 0, uniqueBonds.Size())
+	for inx := range uniqueBonds.Range() {
+		bonds = append(bonds, searcher.bonds[inx])
 	}
 
 	return bonds

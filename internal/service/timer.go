@@ -42,7 +42,7 @@ func (t *TimerService) SubscribeEvery(duration time.Duration, callback func()) {
 			case <-t.context.Done():
 				ticker.Stop()
 
-				break
+				return
 			}
 		}
 	}()

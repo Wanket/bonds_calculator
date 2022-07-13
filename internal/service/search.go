@@ -4,18 +4,24 @@ import (
 	"bonds_calculator/internal/model"
 	"bonds_calculator/internal/model/calculator"
 	"bonds_calculator/internal/model/datastuct"
+	"bonds_calculator/internal/model/datastuct/box"
 	"bonds_calculator/internal/model/moex"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/sync/singleflight"
+	"time"
 )
 
 type SearchService struct {
-	staticCalculator *StaticCalculatorService
-	staticStore      *StaticStoreService
+	staticCalculator IStaticCalculatorService
+	staticStore      IStaticStoreService
 
-	searcher model.BondSearcher
+	searcher            box.ConcurrentBox[model.BondSearcher]
+	searcherUpdatedTime box.ConcurrentBox[time.Time]
+
+	reloadSearcherGroup singleflight.Group
 }
 
-func NewSearchService(staticCalculator *StaticCalculatorService, staticStore *StaticStoreService) SearchService {
+func NewSearchService(staticCalculator IStaticCalculatorService, staticStore IStaticStoreService) *SearchService {
 	service := SearchService{
 		staticCalculator: staticCalculator,
 		staticStore:      staticStore,
@@ -23,7 +29,7 @@ func NewSearchService(staticCalculator *StaticCalculatorService, staticStore *St
 
 	service.reloadSearcher()
 
-	return service
+	return &service
 }
 
 type SearchResult struct {
@@ -34,7 +40,17 @@ type SearchResult struct {
 }
 
 func (search *SearchService) Search(query string) []SearchResult {
-	foundBonds := search.searcher.Search(query)
+	if updatedTime := search.searcherUpdatedTime.SafeRead(); updatedTime.Before(search.staticStore.GetBondsChangedTime()) {
+		go search.reloadSearcherGroup.Do("reloadSearcher", func() (interface{}, error) {
+			search.reloadSearcher()
+
+			return nil, nil
+		})
+	}
+
+	searcher := search.searcher.SafeRead()
+
+	foundBonds := searcher.Search(query)
 
 	searchResults := make([]SearchResult, 0, len(foundBonds))
 	for _, bond := range foundBonds {
@@ -61,7 +77,12 @@ func (search *SearchService) Search(query string) []SearchResult {
 }
 
 func (search *SearchService) reloadSearcher() {
-	bonds := search.staticStore.GetBonds()
+	log.Info("Reload searcher")
 
-	search.searcher = model.NewBondSearcher(bonds)
+	bonds, updateTime := search.staticStore.GetBondsWithUpdateTime()
+
+	search.searcher.Set(model.NewBondSearcher(bonds))
+	search.searcherUpdatedTime.Set(updateTime)
+
+	log.Info("Searcher reloaded")
 }

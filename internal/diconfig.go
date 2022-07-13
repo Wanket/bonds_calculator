@@ -24,7 +24,7 @@ func newSingleTimeService() service.ITimerService {
 	return singleTimeService
 }
 
-func NewStaticStoreService(queueSize int) *service.StaticStoreService {
+func NewStaticStoreService(queueSize int) service.IStaticStoreService {
 	wire.Build(service.NewStaticStoreService, newSingleTimeService, api.NewMoexClient, clock.New)
 
 	return &service.StaticStoreService{}
@@ -32,26 +32,26 @@ func NewStaticStoreService(queueSize int) *service.StaticStoreService {
 
 var singleStaticStoreService = NewStaticStoreService(util.GetGlobalConfig().MoexClientQueueSize())
 
-func newSingleStaticStoreService() *service.StaticStoreService {
+func newSingleStaticStoreService() service.IStaticStoreService {
 	return singleStaticStoreService
 }
 
-func NewStaticCalculatorService() service.StaticCalculatorService {
+func NewStaticCalculatorService() service.IStaticCalculatorService {
 	wire.Build(service.NewStaticCalculatorService, newSingleStaticStoreService, clock.New)
 
-	return service.StaticCalculatorService{}
+	return &service.StaticCalculatorService{}
 }
 
 var singleStaticCalculatorService = NewStaticCalculatorService()
 
-func newSingleStaticCalculatorService() *service.StaticCalculatorService {
-	return &singleStaticCalculatorService
+func newSingleStaticCalculatorService() service.IStaticCalculatorService {
+	return singleStaticCalculatorService
 }
 
-func NewSearchService() service.SearchService {
+func NewSearchService() *service.SearchService {
 	wire.Build(service.NewSearchService, newSingleStaticCalculatorService, newSingleStaticStoreService)
 
-	return service.SearchService{}
+	return &service.SearchService{}
 }
 
 func NewBondInfoService() service.BondInfoService {

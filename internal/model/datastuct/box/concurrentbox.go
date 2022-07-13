@@ -14,14 +14,14 @@ func NewConcurrentBox[T any](value T) ConcurrentBox[T] {
 	}
 }
 
-func (box *ConcurrentBox[T]) LockAndRead() T {
+func (box *ConcurrentBox[T]) SafeRead() T {
 	box.lock.RLock()
 
-	return box.value
-}
+	value := box.value
 
-func (box *ConcurrentBox[T]) UnlockRead() {
 	box.lock.RUnlock()
+
+	return value
 }
 
 func (box *ConcurrentBox[T]) Set(value T) {
