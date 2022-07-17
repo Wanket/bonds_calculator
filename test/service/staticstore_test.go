@@ -18,6 +18,16 @@ import (
 	"time"
 )
 
+var validBond = moex.Bond{
+	Id: "1",
+	SecurityPart: moex.SecurityPart{
+		Value:     1,
+		PriceStep: 1,
+		ShortName: "Test Name",
+	},
+	MarketDataPart: moex.MarketDataPart{},
+}
+
 func TestStaticStoreCreating(t *testing.T) {
 	log.SetOutput(ioutil.Discard)
 
@@ -62,20 +72,13 @@ func TestStaticStoreBondUpdating(t *testing.T) {
 
 	store := service.NewStaticStoreService(mockClient, timer, clockMock)
 
-	expectedBonds := []moex.Bond{
-		{
-			Id: "1",
-			SecurityPart: moex.SecurityPart{
-				ShortName: "First",
-			},
-		},
-		{
-			Id: "2",
-			SecurityPart: moex.SecurityPart{
-				ShortName: "Second",
-			},
-		},
-	}
+	expectedBonds := []moex.Bond{validBond, validBond}
+
+	expectedBonds[0].Id = "1"
+	expectedBonds[0].ShortName = "First"
+
+	expectedBonds[1].Id = "2"
+	expectedBonds[1].ShortName = "Second"
 
 	mockClient.EXPECT().GetBonds().Return(expectedBonds, nil)
 	mockClient.EXPECT().GetBondization(gomock.Any()).AnyTimes().Return(moex.Bondization{}, nil)
@@ -106,11 +109,9 @@ func TestStaticStoreBondizationUpdating(t *testing.T) {
 	timer := service.NewTimerService(clockMock)
 	defer timer.Close()
 
-	useBond := []moex.Bond{
-		{
-			Id: "1",
-		},
-	}
+	useBond := []moex.Bond{validBond}
+	useBond[0].Id = "1"
+	useBond[0].EndDate = time.Time{}.AddDate(0, 0, 20)
 
 	mockClient.EXPECT().GetBonds().Return(useBond, nil)
 
@@ -168,11 +169,10 @@ func TestStaticStoreErrors(t *testing.T) {
 	timer := service.NewTimerService(clockMock)
 	defer timer.Close()
 
-	mockClient.EXPECT().GetBonds().Return([]moex.Bond{
-		{
-			Id: "1",
-		},
-	}, nil)
+	useBond := []moex.Bond{validBond}
+	useBond[0].Id = "1"
+
+	mockClient.EXPECT().GetBonds().Return(useBond, nil)
 
 	for i := 0; i < 6; i++ {
 		mockClient.EXPECT().GetBondization("1").Return(moex.Bondization{}, errors.New("error"))

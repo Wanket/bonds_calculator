@@ -29,7 +29,7 @@ func TestLoadAllBondizations(t *testing.T) {
 
 	assert := asserts.New(t)
 
-	client := api.NewMoexClient(50)
+	client := api.NewMoexClient(25)
 	defer client.Close()
 
 	bonds, _ := client.GetBonds()

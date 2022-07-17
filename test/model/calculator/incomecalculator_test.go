@@ -32,7 +32,7 @@ func TestCalcCurrentOnePercent(t *testing.T) {
 	assert.NoError(err, "CalcPercentForOneBuyHistory (Current) calculation error")
 
 	accuracy := 0.01
-	expected := 0.1415
+	expected := 0.1515
 
 	assert.InDelta(expected, percent, accuracy, "CalcPercentForOneBuyHistory (Current) calculation error")
 }

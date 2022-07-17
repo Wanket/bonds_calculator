@@ -48,8 +48,8 @@ func TestReloadSearcher(t *testing.T) {
 	staticStore.EXPECT().GetBondsChangedTime().Return(updatedTime)
 	staticStore.EXPECT().GetBondsWithUpdateTime().Return(useBonds, updatedTime)
 
-	staticCalculator.EXPECT().CalcStaticStatisticForOneBond(useBonds[0], calculator.IncomeSetting(calculator.Maturity)).Return(10.0, nil)
-	staticCalculator.EXPECT().CalcStaticStatisticForOneBond(useBonds[0], calculator.IncomeSetting(calculator.Current)).Return(20.0, nil)
+	staticCalculator.EXPECT().CalcStaticStatisticForOneBond(useBonds[0], calculator.Maturity).Return(10.0, nil)
+	staticCalculator.EXPECT().CalcStaticStatisticForOneBond(useBonds[0], calculator.Current).Return(20.0, nil)
 
 	result := search.Search("1")
 	for i := 0; len(result) == 0; i++ {
@@ -90,8 +90,8 @@ func TestSearchErrors(t *testing.T) {
 	staticStore.EXPECT().GetBondsWithUpdateTime().Return(useBonds, updatedTime)
 	staticStore.EXPECT().GetBondsChangedTime().Return(updatedTime)
 
-	staticCalculator.EXPECT().CalcStaticStatisticForOneBond(useBonds[0], calculator.IncomeSetting(calculator.Maturity)).Return(0.0, errors.New("mat"))
-	staticCalculator.EXPECT().CalcStaticStatisticForOneBond(useBonds[0], calculator.IncomeSetting(calculator.Current)).Return(0.0, errors.New("cur"))
+	staticCalculator.EXPECT().CalcStaticStatisticForOneBond(useBonds[0], calculator.Maturity).Return(0.0, errors.New("mat"))
+	staticCalculator.EXPECT().CalcStaticStatisticForOneBond(useBonds[0], calculator.Current).Return(0.0, errors.New("cur"))
 
 	search := service.NewSearchService(staticCalculator, staticStore)
 

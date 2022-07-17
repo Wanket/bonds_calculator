@@ -103,6 +103,17 @@ func (staticStore *StaticStoreService) reloadBond() {
 		bonds, err = staticStore.client.GetBonds()
 	}
 
+	for i, end := 0, len(bonds); i < end; i++ {
+		if err := bonds[i].IsValid(); err != nil { // impossible cause of tests but just in case
+			log.Errorf("StaticStoreService: Got invalid bond: %v, error: %v", bonds[i], err)
+
+			bonds[i] = bonds[end-1]
+			bonds = bonds[:end-1]
+			i--
+			end--
+		}
+	}
+
 	staticStore.bondsMap.Set(util.SliceToMapBy(bonds, func(bond moex.Bond) string { return bond.Id }))
 	staticStore.bonds.Set(bonds)
 
@@ -127,6 +138,12 @@ func (staticStore *StaticStoreService) reloadBondization() {
 
 		if err != nil {
 			log.Errorf("StaticStoreService: Error while updating bondization for bond id: %s, error: %v, skipping", bond.Id, err)
+
+			continue
+		}
+
+		if err := bondization.IsValid(bond.EndDate); err != nil { // impossible cause of tests but just in case
+			log.Errorf("StaticStoreService: Got invalid bondization for bond id: %s, error: %v", bond.Id, err)
 
 			continue
 		}
