@@ -46,13 +46,19 @@ func (infoService *BondInfoService) GetBondInfo(bondId string) (BondInfoResult, 
 	bondInfoResult.Bondization = bondization
 
 	if maturity, err := infoService.staticCalculator.CalcStaticStatisticForOneBond(bond, calculator.Maturity); err != nil {
-		log.Errorf("Can't calculate static maturity income for bond %s: %s", bond.Id, err)
+		log.WithFields(log.Fields{
+			"bondId":     bondId,
+			log.ErrorKey: err,
+		}).Errorf("BondInfoService: can't calculate static maturity income")
 	} else {
 		bondInfoResult.MaturityIncome.Set(maturity)
 	}
 
 	if current, err := infoService.staticCalculator.CalcStaticStatisticForOneBond(bond, calculator.Current); err != nil {
-		log.Errorf("Can't calculate static current income for bond %s: %s", bond.Id, err)
+		log.WithFields(log.Fields{
+			"bondId":     bondId,
+			log.ErrorKey: err,
+		}).Errorf("BondInfoService: can't calculate static current income")
 	} else {
 		bondInfoResult.CurrentIncome.Set(current)
 	}

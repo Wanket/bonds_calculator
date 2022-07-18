@@ -93,19 +93,22 @@ func (staticStore *StaticStoreService) GetBondizationsChangedTime() time.Time {
 }
 
 func (staticStore *StaticStoreService) reloadBond() {
-	log.Info("StaticStoreService: Bonds updating started")
+	log.Info("StaticStoreService: bonds updating started")
 
 	bonds, err := staticStore.client.GetBonds()
 
 	for err != nil {
-		log.Errorf("StaticStoreService: Error while updating bonds: %v, retrying...", err)
+		log.WithError(err).Error("StaticStoreService: error while updating bonds, retrying...")
 
 		bonds, err = staticStore.client.GetBonds()
 	}
 
 	for i, end := 0, len(bonds); i < end; i++ {
 		if err := bonds[i].IsValid(); err != nil { // impossible cause of tests but just in case
-			log.Errorf("StaticStoreService: Got invalid bond: %v, error: %v", bonds[i], err)
+			log.WithFields(log.Fields{
+				"bond":       bonds[i],
+				log.ErrorKey: err,
+			}).Errorf("StaticStoreService: got invalid bond")
 
 			bonds[i] = bonds[end-1]
 			bonds = bonds[:end-1]
@@ -117,41 +120,56 @@ func (staticStore *StaticStoreService) reloadBond() {
 	staticStore.bondsMap.Set(util.SliceToMapBy(bonds, func(bond moex.Bond) string { return bond.Id }))
 	staticStore.bonds.Set(bonds)
 
-	log.Info("StaticStoreService: Bonds updated successfully")
+	log.WithField("count", len(bonds)).Info("StaticStoreService: bonds updated")
 }
 
 func (staticStore *StaticStoreService) reloadBondization() {
-	log.Info("StaticStoreService: Bondizations updating started")
+	log.Info("StaticStoreService: bondizations updating started")
 
 	bonds := staticStore.GetBonds()
 
 	bondizations := make(map[string]moex.Bondization, len(bonds))
 
-	for _, bond := range bonds {
+	for i, bond := range bonds {
 		bondization, err := staticStore.client.GetBondization(bond.Id)
 
 		for tryCount := 0; err != nil && tryCount < 5; tryCount++ {
-			log.Errorf("StaticStoreService: Error while updating bondization for bond id: %s, error: %v", bond.Id, err)
+			log.WithFields(log.Fields{
+				"bond":       bond,
+				log.ErrorKey: err,
+				"tryCount":   tryCount,
+			}).Errorf("StaticStoreService: error while updating bondization, retrying...")
 
 			bondization, err = staticStore.client.GetBondization(bond.Id)
 		}
 
 		if err != nil {
-			log.Errorf("StaticStoreService: Error while updating bondization for bond id: %s, error: %v, skipping", bond.Id, err)
+			log.WithFields(log.Fields{
+				"bond":       bond,
+				log.ErrorKey: err,
+			}).Errorf("StaticStoreService: error while updating bondization, skipping")
 
 			continue
 		}
 
 		if err := bondization.IsValid(bond.EndDate); err != nil { // impossible cause of tests but just in case
-			log.Errorf("StaticStoreService: Got invalid bondization for bond id: %s, error: %v", bond.Id, err)
+			log.WithFields(log.Fields{
+				"bond":        bond,
+				"bondization": bondization,
+				log.ErrorKey:  err,
+			}).Errorf("StaticStoreService: got invalid bondization")
 
 			continue
 		}
 
 		bondizations[bond.Id] = bondization
+
+		if i%200 == 0 {
+			log.WithField("i", i).Info("StaticStoreService: updating bondizations...")
+		}
 	}
 
 	staticStore.bondizations.Set(bondizations)
 
-	log.Info("StaticStoreService: Bondizations updating ended")
+	log.WithField("count", len(bondizations)).Info("StaticStoreService: bondizations updating ended")
 }

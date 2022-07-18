@@ -1,3 +1,4 @@
+//go:generate easyjson $GOFILE
 package service
 
 import (
@@ -11,6 +12,10 @@ import (
 	"time"
 )
 
+type ISearchService interface {
+	Search(query string) SearchResults
+}
+
 type SearchService struct {
 	staticCalculator IStaticCalculatorService
 	staticStore      IStaticStoreService
@@ -21,7 +26,7 @@ type SearchService struct {
 	reloadSearcherGroup singleflight.Group
 }
 
-func NewSearchService(staticCalculator IStaticCalculatorService, staticStore IStaticStoreService) *SearchService {
+func NewSearchService(staticCalculator IStaticCalculatorService, staticStore IStaticStoreService) ISearchService {
 	service := SearchService{
 		staticCalculator: staticCalculator,
 		staticStore:      staticStore,
@@ -32,6 +37,7 @@ func NewSearchService(staticCalculator IStaticCalculatorService, staticStore ISt
 	return &service
 }
 
+//easyjson:json
 type SearchResult struct {
 	Bond moex.Bond
 
@@ -39,7 +45,10 @@ type SearchResult struct {
 	CurrentIncome  datastuct.Optional[float64]
 }
 
-func (search *SearchService) Search(query string) []SearchResult {
+//easyjson:json
+type SearchResults []SearchResult
+
+func (search *SearchService) Search(query string) SearchResults {
 	if updatedTime := search.searcherUpdatedTime.SafeRead(); updatedTime.Before(search.staticStore.GetBondsChangedTime()) {
 		go search.reloadSearcherGroup.Do("reloadSearcher", func() (interface{}, error) {
 			search.reloadSearcher()
@@ -59,13 +68,19 @@ func (search *SearchService) Search(query string) []SearchResult {
 		}
 
 		if maturity, err := search.staticCalculator.CalcStaticStatisticForOneBond(bond, calculator.Maturity); err != nil {
-			log.Errorf("Can't calculate static maturity income for bond %s: %s", bond.Id, err)
+			log.WithFields(log.Fields{
+				"bondId":     bond.Id,
+				log.ErrorKey: err,
+			}).Errorf("SearchService: can't calculate static maturity income")
 		} else {
 			searchResult.MaturityIncome.Set(maturity)
 		}
 
 		if current, err := search.staticCalculator.CalcStaticStatisticForOneBond(bond, calculator.Current); err != nil {
-			log.Errorf("Can't calculate static current income for bond %s: %s", bond.Id, err)
+			log.WithFields(log.Fields{
+				"bondId":     bond.Id,
+				log.ErrorKey: err,
+			}).Errorf("SearchService: can't calculate static current income")
 		} else {
 			searchResult.CurrentIncome.Set(current)
 		}
@@ -77,12 +92,12 @@ func (search *SearchService) Search(query string) []SearchResult {
 }
 
 func (search *SearchService) reloadSearcher() {
-	log.Info("Reload searcher")
+	log.Info("SearchService: reload searcher")
 
 	bonds, updateTime := search.staticStore.GetBondsWithUpdateTime()
 
 	search.searcher.Set(model.NewBondSearcher(bonds))
 	search.searcherUpdatedTime.Set(updateTime)
 
-	log.Info("Searcher reloaded")
+	log.Info("SearchService: searcher reloaded")
 }
