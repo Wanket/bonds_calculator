@@ -62,7 +62,7 @@ func TestStaticCalculator(t *testing.T) {
 	result, err := calc.CalcStaticStatisticForOneBond(moex.Bond{
 		Id: "1",
 		MarketDataPart: moex.MarketDataPart{
-			CurrentPrice: 10.0,
+			CurrentPricePercent: 10.0,
 		},
 		SecurityPart: moex.SecurityPart{
 			Coupon: 30.0,
@@ -128,7 +128,7 @@ func TestStaticCalculatorErrors(t *testing.T) {
 	result, err = calc.CalcStaticStatisticForOneBond(moex.Bond{
 		Id: "2",
 		MarketDataPart: moex.MarketDataPart{
-			CurrentPrice: 10.0,
+			CurrentPricePercent: 10.0,
 		},
 		SecurityPart: moex.SecurityPart{
 			Coupon: 30.0,

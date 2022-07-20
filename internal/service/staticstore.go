@@ -43,7 +43,7 @@ func NewStaticStoreService(client api.IMoexClient, timer ITimerService, clock cl
 	staticStore.reloadBondization()
 
 	timer.SubscribeEvery(time.Minute*5, staticStore.reloadBond)
-	timer.SubscribeEveryStartFrom(time.Hour*24, util.GetMoexMidnight(staticStore.clock), staticStore.reloadBondization)
+	timer.SubscribeEveryStartFrom(time.Hour*24, util.GetMoexMidnight(staticStore.clock).Add(time.Hour*24), staticStore.reloadBondization)
 
 	return &staticStore
 }

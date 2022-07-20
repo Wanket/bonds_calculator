@@ -38,7 +38,7 @@ func (staticCalculatorService *StaticCalculatorService) CalcStaticStatisticForOn
 		BondId:       bond.Id,
 		Count:        1,
 		Date:         util.GetMoexNow(staticCalculatorService.clock),
-		Price:        bond.CurrentPrice,
+		Price:        bond.AbsoluteCurrentPrice(),
 		AccCoupon:    bond.AccCoupon,
 		NominalValue: bond.Value,
 	}, setting)

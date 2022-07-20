@@ -25,20 +25,20 @@ type (
 	}
 
 	SecurityPart struct {
-		ShortName     string
-		Coupon        float64
-		NextCoupon    time.Time
-		AccCoupon     float64
-		PrevPrice     float64
-		Value         float64
-		CouponPeriod  uint
-		PriceStep     float64
-		CouponPercent datastuct.Optional[float64]
-		EndDate       time.Time
+		ShortName        string
+		Coupon           float64
+		NextCoupon       time.Time
+		AccCoupon        float64
+		PrevPricePercent float64
+		Value            float64
+		CouponPeriod     uint
+		PriceStep        float64
+		CouponPercent    datastuct.Optional[float64]
+		EndDate          time.Time
 	}
 
 	MarketDataPart struct {
-		CurrentPrice float64
+		CurrentPricePercent float64
 	}
 )
 
@@ -72,6 +72,10 @@ func (bond *Bond) IsValid() error {
 	}
 
 	return nil
+}
+
+func (bond *Bond) AbsoluteCurrentPrice() float64 {
+	return bond.CurrentPricePercent * bond.Value
 }
 
 func ParseBondsCp1251(buf []byte) ([]Bond, error) {
@@ -210,15 +214,15 @@ func tryParseSecurity(line []string) (SecurityPart, error) {
 	}
 
 	return SecurityPart{
-		ShortName:     shortName,
-		Coupon:        coupon,
-		NextCoupon:    nextCoupon,
-		AccCoupon:     accCoupon,
-		PrevPrice:     prevPriceF,
-		Value:         value,
-		CouponPeriod:  uint(couponPeriod),
-		PriceStep:     priceStep,
-		CouponPercent: couponPercent,
-		EndDate:       endDate,
+		ShortName:        shortName,
+		Coupon:           coupon,
+		NextCoupon:       nextCoupon,
+		AccCoupon:        accCoupon,
+		PrevPricePercent: prevPriceF,
+		Value:            value,
+		CouponPeriod:     uint(couponPeriod),
+		PriceStep:        priceStep,
+		CouponPercent:    couponPercent,
+		EndDate:          endDate,
 	}, nil
 }
