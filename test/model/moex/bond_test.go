@@ -47,6 +47,7 @@ func loadParsedBonds() []moex.Bond {
 				PriceStep:        0.01,
 				CouponPercent:    datastuct.NewOptional(15.000),
 				EndDate:          ParseDate("2023-08-26"),
+				Currency:         "SUR",
 			},
 			MarketDataPart: moex.MarketDataPart{
 				CurrentPricePercent: 101.8,

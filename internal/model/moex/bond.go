@@ -14,7 +14,7 @@ import (
 
 // Structs for this response:
 // https://iss.moex.com/iss/engines/stock/markets/bonds/securities.csv?iss.meta=off&iss.only=marketdata,securities&securities.columns=$1&marketdata.columns=$2
-// $1 = SECID,SHORTNAME,COUPONVALUE,NEXTCOUPON,ACCRUEDINT,PREVPRICE,FACEVALUE,COUPONPERIOD,MINSTEP,COUPONPERCENT,MATDATE
+// $1 = SECID,SHORTNAME,COUPONVALUE,NEXTCOUPON,ACCRUEDINT,PREVPRICE,FACEVALUE,COUPONPERIOD,MINSTEP,COUPONPERCENT,MATDATE,FACEUNIT
 // $2 = SECID,LCURRENTPRICE
 
 type (
@@ -35,6 +35,7 @@ type (
 		PriceStep        float64
 		CouponPercent    datastuct.Optional[float64]
 		EndDate          time.Time
+		Currency         string
 	}
 
 	MarketDataPart struct {
@@ -185,7 +186,7 @@ func tryParseMarketData(line []string) (MarketDataPart, error) {
 }
 
 func tryParseSecurity(line []string) (SecurityPart, error) {
-	if len(line) != 11 {
+	if len(line) != 12 {
 		return SecurityPart{}, fmt.Errorf("wrong Security data line len %d", len(line))
 	}
 
@@ -208,9 +209,14 @@ func tryParseSecurity(line []string) (SecurityPart, error) {
 	couponPeriod, err := strconv.ParseInt(line[7], 10, 64)
 	priceStep, err := strconv.ParseFloat(line[8], 64)
 	couponPercent, err := util.ParseOptionalFloat64(line[9])
+	currency := line[11]
 
 	if err != nil {
 		return SecurityPart{}, fmt.Errorf("cannot parse Security %v", err)
+	}
+
+	if currency != "SUR" {
+		return SecurityPart{}, skipError
 	}
 
 	return SecurityPart{
@@ -224,5 +230,6 @@ func tryParseSecurity(line []string) (SecurityPart, error) {
 		PriceStep:        priceStep,
 		CouponPercent:    couponPercent,
 		EndDate:          endDate,
+		Currency:         currency,
 	}, nil
 }

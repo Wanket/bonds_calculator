@@ -40,10 +40,10 @@ func newSearchService() service.ISearchService {
 	return &service.SearchService{}
 }
 
-func newBondInfoService() service.BondInfoService {
+func newBondInfoService() service.IBondInfoService {
 	wire.Build(service.NewBondInfoService, getSingleStaticCalculatorService, getSingleStaticStoreService)
 
-	return service.BondInfoService{}
+	return &service.BondInfoService{}
 }
 
 func newSearchController() *controller.SearchController {
@@ -52,8 +52,14 @@ func newSearchController() *controller.SearchController {
 	return &controller.SearchController{}
 }
 
+func newBondInfoController() *controller.BondInfoController {
+	wire.Build(controller.NewBondInfoController, getSingleBondInfoService)
+
+	return &controller.BondInfoController{}
+}
+
 func newApplication() Application {
-	wire.Build(NewApplication, endponit.NewRouter, endponit.NewFiberApp, getSingleSearchController)
+	wire.Build(NewApplication, endponit.NewRouter, endponit.NewFiberApp, getSingleSearchController, getSingleBondInfoController)
 
 	return Application{}
 }
@@ -68,6 +74,8 @@ var (
 	singleTimeService             = newTimerService()
 
 	searchController = newSearchController()
+
+	bondInfoController = newBondInfoController()
 
 	app = newApplication()
 )
@@ -94,10 +102,14 @@ func getSingleSearchService() service.ISearchService {
 	return singleSearchService
 }
 
-func getSingleBondInfoService() *service.BondInfoService {
-	return &singleBondInfoService
+func getSingleBondInfoService() service.IBondInfoService {
+	return singleBondInfoService
 }
 
 func getSingleSearchController() *controller.SearchController {
 	return searchController
+}
+
+func getSingleBondInfoController() *controller.BondInfoController {
+	return bondInfoController
 }

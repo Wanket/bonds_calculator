@@ -9,13 +9,16 @@ import (
 type Router struct {
 	fiberApp *fiber.App
 
-	search *controller.SearchController
+	search   *controller.SearchController
+	bondInfo *controller.BondInfoController
 }
 
-func NewRouter(app *fiber.App, search *controller.SearchController) *Router {
+func NewRouter(app *fiber.App, search *controller.SearchController, bondInfo *controller.BondInfoController) *Router {
 	return &Router{
 		fiberApp: app,
+
 		search:   search,
+		bondInfo: bondInfo,
 	}
 }
 
@@ -24,7 +27,10 @@ func (router *Router) Configure() {
 
 	apiGroup := router.fiberApp.Group("/api")
 
-	router.search.Configure(apiGroup)
+	staticGroup := apiGroup.Group("/static")
+
+	router.search.Configure(staticGroup)
+	router.bondInfo.Configure(staticGroup)
 
 	log.Info("Router: configured")
 }

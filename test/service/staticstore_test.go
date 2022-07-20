@@ -42,7 +42,7 @@ func TestStaticStoreCreating(t *testing.T) {
 	mockClient.EXPECT().GetBonds().Return([]moex.Bond{}, nil)
 
 	timerMock.EXPECT().SubscribeEvery(time.Minute*5, gomock.Any()).Return()
-	timerMock.EXPECT().SubscribeEveryStartFrom(time.Hour*24, util.GetMoexMidnight(clockMock), gomock.Any()).Return()
+	timerMock.EXPECT().SubscribeEveryStartFrom(time.Hour*24, util.GetMoexMidnight(clockMock).Add(time.Hour*24), gomock.Any()).Return()
 
 	now := time.Now()
 

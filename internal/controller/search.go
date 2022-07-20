@@ -26,7 +26,7 @@ func (controller *SearchController) Configure(router fiber.Router) {
 
 func (controller *SearchController) Search(ctx *fiber.Ctx) error {
 	query := ctx.Query("query")
-	if query == "" {
+	if len(query) < 3 {
 		return fiber.NewError(fiber.StatusBadRequest)
 	}
 

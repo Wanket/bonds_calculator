@@ -1,3 +1,4 @@
+//go:generate easyjson $GOFILE
 package service
 
 import (
@@ -8,18 +9,23 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type IBondInfoService interface {
+	GetBondInfo(bondId string) (BondInfoResult, error)
+}
+
 type BondInfoService struct {
 	staticCalculator IStaticCalculatorService
 	staticStore      IStaticStoreService
 }
 
-func NewBondInfoService(staticCalculator IStaticCalculatorService, staticStore IStaticStoreService) BondInfoService {
-	return BondInfoService{
+func NewBondInfoService(staticCalculator IStaticCalculatorService, staticStore IStaticStoreService) IBondInfoService {
+	return &BondInfoService{
 		staticCalculator: staticCalculator,
 		staticStore:      staticStore,
 	}
 }
 
+//easyjson:json
 type BondInfoResult struct {
 	Bond        moex.Bond
 	Bondization moex.Bondization
