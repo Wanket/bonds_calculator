@@ -3,13 +3,13 @@ package model
 import (
 	"bonds_calculator/internal/model"
 	"bonds_calculator/internal/model/moex"
-	asserts "github.com/stretchr/testify/assert"
+	"bonds_calculator/test"
 	"golang.org/x/exp/slices"
 	"testing"
 )
 
 func TestBondSearcher(t *testing.T) {
-	t.Parallel()
+	assert, _ := test.PrepareTest(t)
 
 	bonds := []moex.Bond{
 		{
@@ -41,10 +41,10 @@ func TestBondSearcher(t *testing.T) {
 	bondsSearcher := model.NewBondSearcher(bonds)
 
 	result := bondsSearcher.Search("bonD")
-	asserts.Equal(t, sortedBondsById(bonds[0:2]), sortedBondsById(result))
+	assert.Equal(sortedBondsById(bonds[0:2]), sortedBondsById(result))
 
 	result = bondsSearcher.Search("BND")
-	asserts.Equal(t, sortedBondsById(bonds[0:3]), sortedBondsById(result))
+	assert.Equal(sortedBondsById(bonds[0:3]), sortedBondsById(result))
 }
 
 func sortedBondsById(bonds []moex.Bond) []moex.Bond {

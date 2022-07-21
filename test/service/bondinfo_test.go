@@ -5,26 +5,17 @@ import (
 	"bonds_calculator/internal/model/datastuct"
 	"bonds_calculator/internal/model/moex"
 	"bonds_calculator/internal/service"
-	mock_service "bonds_calculator/internal/service/mock"
+	mockservice "bonds_calculator/internal/service/mock"
+	"bonds_calculator/test"
 	"errors"
 	"github.com/golang/mock/gomock"
-	log "github.com/sirupsen/logrus"
-	asserts "github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"testing"
 )
 
 func TestBondInfoService(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	assert, mockController := test.PrepareTest(t)
 
-	t.Parallel()
-
-	assert := asserts.New(t)
-
-	mockController := gomock.NewController(t)
-
-	staticCalculator := mock_service.NewMockIStaticCalculatorService(mockController)
-	staticStore := mock_service.NewMockIStaticStoreService(mockController)
+	staticCalculator, staticStore := prepareBondInfoServiceDependencies(mockController)
 
 	useBond := moex.Bond{
 		Id: "1",
@@ -50,16 +41,9 @@ func TestBondInfoService(t *testing.T) {
 }
 
 func TestBondInfoServiceBondError(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	assert, mockController := test.PrepareTest(t)
 
-	t.Parallel()
-
-	assert := asserts.New(t)
-
-	mockController := gomock.NewController(t)
-
-	staticCalculator := mock_service.NewMockIStaticCalculatorService(mockController)
-	staticStore := mock_service.NewMockIStaticStoreService(mockController)
+	staticCalculator, staticStore := prepareBondInfoServiceDependencies(mockController)
 
 	bi := service.NewBondInfoService(staticCalculator, staticStore)
 
@@ -75,16 +59,9 @@ func TestBondInfoServiceBondError(t *testing.T) {
 }
 
 func TestBondInfoServiceBondizationError(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	assert, mockController := test.PrepareTest(t)
 
-	t.Parallel()
-
-	assert := asserts.New(t)
-
-	mockController := gomock.NewController(t)
-
-	staticCalculator := mock_service.NewMockIStaticCalculatorService(mockController)
-	staticStore := mock_service.NewMockIStaticStoreService(mockController)
+	staticCalculator, staticStore := prepareBondInfoServiceDependencies(mockController)
 
 	bi := service.NewBondInfoService(staticCalculator, staticStore)
 
@@ -104,16 +81,9 @@ func TestBondInfoServiceBondizationError(t *testing.T) {
 }
 
 func TestBondInfoServiceNoStatisticError(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	assert, mockController := test.PrepareTest(t)
 
-	t.Parallel()
-
-	assert := asserts.New(t)
-
-	mockController := gomock.NewController(t)
-
-	staticCalculator := mock_service.NewMockIStaticCalculatorService(mockController)
-	staticStore := mock_service.NewMockIStaticStoreService(mockController)
+	staticCalculator, staticStore := prepareBondInfoServiceDependencies(mockController)
 
 	bi := service.NewBondInfoService(staticCalculator, staticStore)
 
@@ -137,16 +107,9 @@ func TestBondInfoServiceNoStatisticError(t *testing.T) {
 }
 
 func TestBondInfoServiceOneStatisticError(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	assert, mockController := test.PrepareTest(t)
 
-	t.Parallel()
-
-	assert := asserts.New(t)
-
-	mockController := gomock.NewController(t)
-
-	staticCalculator := mock_service.NewMockIStaticCalculatorService(mockController)
-	staticStore := mock_service.NewMockIStaticStoreService(mockController)
+	staticCalculator, staticStore := prepareBondInfoServiceDependencies(mockController)
 
 	bi := service.NewBondInfoService(staticCalculator, staticStore)
 
@@ -167,4 +130,11 @@ func TestBondInfoServiceOneStatisticError(t *testing.T) {
 	assert.Equal(moex.Bondization{Id: "1"}, result.Bondization)
 	assert.Equal(datastuct.Optional[float64]{}, result.MaturityIncome)
 	assert.Equal(datastuct.NewOptional(2.0), result.CurrentIncome)
+}
+
+func prepareBondInfoServiceDependencies(mockController *gomock.Controller) (*mockservice.MockIStaticCalculatorService, *mockservice.MockIStaticStoreService) {
+	staticCalculator := mockservice.NewMockIStaticCalculatorService(mockController)
+	staticStore := mockservice.NewMockIStaticStoreService(mockController)
+
+	return staticCalculator, staticStore
 }

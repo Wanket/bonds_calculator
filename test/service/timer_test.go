@@ -2,22 +2,18 @@ package service
 
 import (
 	"bonds_calculator/internal/service"
+	"bonds_calculator/test"
 	"fmt"
 	"github.com/benbjohnson/clock"
-	asserts "github.com/stretchr/testify/assert"
 	"runtime"
 	"testing"
 	"time"
 )
 
 func TestTimer(t *testing.T) {
-	t.Parallel()
+	assert, _ := test.PrepareTest(t)
 
-	assert := asserts.New(t)
-
-	mockClock := clock.NewMock()
-
-	timer := service.NewTimerService(mockClock)
+	timer, mockClock := prepareTimer()
 	defer timer.Close()
 
 	doneChan := make(chan struct{})
@@ -54,13 +50,9 @@ func TestTimer(t *testing.T) {
 }
 
 func TestTimerStartFrom(t *testing.T) {
-	t.Parallel()
+	assert, _ := test.PrepareTest(t)
 
-	assert := asserts.New(t)
-
-	mockClock := clock.NewMock()
-
-	timer := service.NewTimerService(mockClock)
+	timer, mockClock := prepareTimer()
 	defer timer.Close()
 
 	doneChan := make(chan struct{})
@@ -97,4 +89,12 @@ func TestTimerStartFrom(t *testing.T) {
 			assert.Fail("SubscribeEveryStartFrom timeout", fmt.Sprintf("duration id: %d", i))
 		}
 	}
+}
+
+func prepareTimer() (service.ITimerService, *clock.Mock) {
+	mockClock := clock.NewMock()
+
+	timer := service.NewTimerService(mockClock)
+
+	return timer, mockClock
 }

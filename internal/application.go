@@ -12,10 +12,10 @@ type Application struct {
 	fiberApp *fiber.App
 }
 
-func NewApplication(app *fiber.App, router *endponit.Router) Application {
+func NewApplication(app *fiber.App, router *endponit.Router) *Application {
 	router.Configure()
 
-	return Application{
+	return &Application{
 		fiberApp: app,
 	}
 }

@@ -12,6 +12,7 @@ import (
 	"bonds_calculator/internal/util"
 	"github.com/benbjohnson/clock"
 	"github.com/google/wire"
+	"github.com/hymkor/go-lazy"
 )
 
 // functions which are crating New instances
@@ -58,58 +59,59 @@ func newBondInfoController() *controller.BondInfoController {
 	return &controller.BondInfoController{}
 }
 
-func newApplication() Application {
+func newApplication() *Application {
 	wire.Build(NewApplication, endponit.NewRouter, endponit.NewFiberApp, getSingleSearchController, getSingleBondInfoController)
 
-	return Application{}
+	return &Application{}
 }
 
 // singleton objects
 
 var (
-	singleSearchService           = newSearchService()
-	singleBondInfoService         = newBondInfoService()
-	singleStaticCalculatorService = newStaticCalculatorService()
-	singleStaticStoreService      = newStaticStoreService(util.GetGlobalConfig().MoexClientQueueSize())
-	singleTimeService             = newTimerService()
+	searchService           = lazy.New(newSearchService)
+	bondInfoService         = lazy.New(newBondInfoService)
+	staticCalculatorService = lazy.New(newStaticCalculatorService)
+	timeService             = lazy.New(newTimerService)
+	staticStoreService      = lazy.New(func() service.IStaticStoreService {
+		return newStaticStoreService(util.GetGlobalConfig().MoexClientQueueSize())
+	})
 
-	searchController = newSearchController()
+	searchController   = lazy.New(newSearchController)
+	bondInfoController = lazy.New(newBondInfoController)
 
-	bondInfoController = newBondInfoController()
-
-	app = newApplication()
+	app = lazy.New(newApplication)
 )
 
 // functions to get singletons
 
 func GetApp() *Application {
-	return &app
+	return app.Value()
 }
 
 func getSingleTimeService() service.ITimerService {
-	return singleTimeService
+	return timeService.Value()
 }
 
 func getSingleStaticStoreService() service.IStaticStoreService {
-	return singleStaticStoreService
+	return staticStoreService.Value()
 }
 
 func getSingleStaticCalculatorService() service.IStaticCalculatorService {
-	return singleStaticCalculatorService
+	return staticCalculatorService.Value()
 }
 
 func getSingleSearchService() service.ISearchService {
-	return singleSearchService
+	return searchService.Value()
 }
 
 func getSingleBondInfoService() service.IBondInfoService {
-	return singleBondInfoService
+	return bondInfoService.Value()
 }
 
 func getSingleSearchController() *controller.SearchController {
-	return searchController
+	return searchController.Value()
 }
 
 func getSingleBondInfoController() *controller.BondInfoController {
-	return bondInfoController
+	return bondInfoController.Value()
 }

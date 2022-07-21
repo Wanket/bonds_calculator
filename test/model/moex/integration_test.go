@@ -2,16 +2,14 @@ package moex
 
 import (
 	"bonds_calculator/internal/api"
-	asserts "github.com/stretchr/testify/assert"
+	"bonds_calculator/test"
 	"sync"
 	"testing"
 	"time"
 )
 
 func TestBondNullFields(t *testing.T) {
-	t.Parallel()
-
-	assert := asserts.New(t)
+	assert, _ := test.PrepareTest(t)
 
 	client := api.NewMoexClient(1)
 	defer client.Close()
@@ -25,9 +23,7 @@ func TestBondNullFields(t *testing.T) {
 }
 
 func TestLoadAllBondizations(t *testing.T) {
-	t.Parallel()
-
-	assert := asserts.New(t)
+	assert, _ := test.PrepareTest(t)
 
 	client := api.NewMoexClient(25)
 	defer client.Close()

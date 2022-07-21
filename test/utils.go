@@ -3,11 +3,27 @@ package test
 import (
 	"bonds_calculator/internal/model/db"
 	"fmt"
+	"github.com/golang/mock/gomock"
+	log "github.com/sirupsen/logrus"
 	asserts "github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slices"
+	"io/ioutil"
 	"reflect"
+	"testing"
 	"time"
 )
+
+func PrepareTest(t *testing.T) (*asserts.Assertions, *gomock.Controller) {
+	log.SetOutput(ioutil.Discard)
+
+	t.Parallel()
+
+	assert := asserts.New(t)
+
+	mockController := gomock.NewController(t)
+
+	return assert, mockController
+}
 
 func CheckFailed[T any](assert *asserts.Assertions, t T, err error) {
 	tIsNil := isZero[T](t)

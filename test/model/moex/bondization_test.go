@@ -2,8 +2,8 @@ package moex
 
 import (
 	"bonds_calculator/internal/model/moex"
+	"bonds_calculator/test"
 	testdataloader "github.com/peteole/testdata-loader"
-	asserts "github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -13,9 +13,7 @@ var (
 )
 
 func TestDeserializeBondization(t *testing.T) {
-	t.Parallel()
-
-	assert := asserts.New(t)
+	assert, _ := test.PrepareTest(t)
 
 	bondization, err := moex.ParseBondization(parsedBondization.Id, bondizationData)
 	assert.NoError(err, "unmarshalling bondization")

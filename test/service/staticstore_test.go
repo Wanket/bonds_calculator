@@ -7,12 +7,10 @@ import (
 	"bonds_calculator/internal/service"
 	mockservice "bonds_calculator/internal/service/mock"
 	"bonds_calculator/internal/util"
+	"bonds_calculator/test"
 	"errors"
 	"github.com/benbjohnson/clock"
 	"github.com/golang/mock/gomock"
-	log "github.com/sirupsen/logrus"
-	asserts "github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"runtime"
 	"testing"
 	"time"
@@ -29,15 +27,9 @@ var validBond = moex.Bond{
 }
 
 func TestStaticStoreCreating(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	assert, mockController := test.PrepareTest(t)
 
-	assert := asserts.New(t)
-
-	mockController := gomock.NewController(t)
-
-	mockClient := mockapi.NewMockIMoexClient(mockController)
-	timerMock := mockservice.NewMockITimerService(mockController)
-	clockMock := clock.NewMock()
+	mockClient, timerMock, clockMock := prepareStaticStoreDependencies(mockController)
 
 	mockClient.EXPECT().GetBonds().Return([]moex.Bond{}, nil)
 
@@ -54,16 +46,9 @@ func TestStaticStoreCreating(t *testing.T) {
 }
 
 func TestStaticStoreBondUpdating(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	assert, mockController := test.PrepareTest(t)
 
-	t.Parallel()
-
-	assert := asserts.New(t)
-
-	mockController := gomock.NewController(t)
-
-	mockClient := mockapi.NewMockIMoexClient(mockController)
-	clockMock := clock.NewMock()
+	mockClient, _, clockMock := prepareStaticStoreDependencies(mockController)
 
 	timer := service.NewTimerService(clockMock)
 	defer timer.Close()
@@ -95,16 +80,9 @@ func TestStaticStoreBondUpdating(t *testing.T) {
 }
 
 func TestStaticStoreBondizationUpdating(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	assert, mockController := test.PrepareTest(t)
 
-	t.Parallel()
-
-	assert := asserts.New(t)
-
-	mockController := gomock.NewController(t)
-
-	mockClient := mockapi.NewMockIMoexClient(mockController)
-	clockMock := clock.NewMock()
+	mockClient, _, clockMock := prepareStaticStoreDependencies(mockController)
 
 	timer := service.NewTimerService(clockMock)
 	defer timer.Close()
@@ -155,16 +133,9 @@ func TestStaticStoreBondizationUpdating(t *testing.T) {
 }
 
 func TestStaticStoreErrors(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	assert, mockController := test.PrepareTest(t)
 
-	t.Parallel()
-
-	assert := asserts.New(t)
-
-	mockController := gomock.NewController(t)
-
-	mockClient := mockapi.NewMockIMoexClient(mockController)
-	clockMock := clock.NewMock()
+	mockClient, _, clockMock := prepareStaticStoreDependencies(mockController)
 
 	timer := service.NewTimerService(clockMock)
 	defer timer.Close()
@@ -183,4 +154,12 @@ func TestStaticStoreErrors(t *testing.T) {
 	bondization, err := store.GetBondization("1")
 	assert.Error(err)
 	assert.Equal(moex.Bondization{}, bondization)
+}
+
+func prepareStaticStoreDependencies(mockController *gomock.Controller) (*mockapi.MockIMoexClient, *mockservice.MockITimerService, *clock.Mock) {
+	mockClient := mockapi.NewMockIMoexClient(mockController)
+	timerMock := mockservice.NewMockITimerService(mockController)
+	clockMock := clock.NewMock()
+
+	return mockClient, timerMock, clockMock
 }

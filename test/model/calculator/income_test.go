@@ -3,14 +3,12 @@ package calculator
 import (
 	"bonds_calculator/internal/model/calculator"
 	"bonds_calculator/internal/model/moex"
-	asserts "github.com/stretchr/testify/assert"
+	"bonds_calculator/test"
 	"testing"
 )
 
 func TestCalcMaturityOnePercent(t *testing.T) {
-	t.Parallel()
-
-	assert := asserts.New(t)
+	assert, _ := test.PrepareTest(t)
 
 	incomeCalculator := calculator.NewIncomeCalculator(&parsedBondization)
 	percent, err := incomeCalculator.CalcPercentForOneBuyHistory(buyHistory, calculator.Maturity)
@@ -23,9 +21,7 @@ func TestCalcMaturityOnePercent(t *testing.T) {
 }
 
 func TestCalcCurrentOnePercent(t *testing.T) {
-	t.Parallel()
-
-	assert := asserts.New(t)
+	assert, _ := test.PrepareTest(t)
 
 	incomeCalculator := calculator.NewIncomeCalculator(&parsedBondization)
 	percent, err := incomeCalculator.CalcPercentForOneBuyHistory(buyHistory, calculator.Current)
@@ -38,9 +34,7 @@ func TestCalcCurrentOnePercent(t *testing.T) {
 }
 
 func TestCalcMultiBuyPercent(t *testing.T) {
-	t.Parallel()
-
-	assert := asserts.New(t)
+	assert, _ := test.PrepareTest(t)
 
 	incomeCalculator := calculator.NewIncomeCalculator(&parsedBondization)
 	percent, err := incomeCalculator.CalcPercent(multiplyBuyHistory, calculator.Maturity)
@@ -53,9 +47,7 @@ func TestCalcMultiBuyPercent(t *testing.T) {
 }
 
 func TestCalcVariablePercent(t *testing.T) {
-	t.Parallel()
-
-	assert := asserts.New(t)
+	assert, _ := test.PrepareTest(t)
 
 	bonds, _ := moex.ParseBondsCp1251(bondsVariableData)
 	bondizations, _ := moex.ParseBondization(bonds[0].Id, bondizationVariableData)

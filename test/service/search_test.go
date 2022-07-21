@@ -6,27 +6,18 @@ import (
 	"bonds_calculator/internal/model/moex"
 	"bonds_calculator/internal/service"
 	mockservice "bonds_calculator/internal/service/mock"
+	"bonds_calculator/test"
 	"errors"
 	"github.com/golang/mock/gomock"
-	log "github.com/sirupsen/logrus"
-	asserts "github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"runtime"
 	"testing"
 	"time"
 )
 
 func TestReloadSearcher(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	assert, mockController := test.PrepareTest(t)
 
-	t.Parallel()
-
-	assert := asserts.New(t)
-
-	mockController := gomock.NewController(t)
-
-	staticCalculator := mockservice.NewMockIStaticCalculatorService(mockController)
-	staticStore := mockservice.NewMockIStaticStoreService(mockController)
+	staticCalculator, staticStore := prepareSearchServiceDependencies(mockController)
 
 	updatedTime := time.Now()
 	staticStore.EXPECT().GetBondsWithUpdateTime().Return([]moex.Bond{}, updatedTime)
@@ -68,16 +59,9 @@ func TestReloadSearcher(t *testing.T) {
 }
 
 func TestSearchErrors(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	assert, mockController := test.PrepareTest(t)
 
-	t.Parallel()
-
-	assert := asserts.New(t)
-
-	mockController := gomock.NewController(t)
-
-	staticCalculator := mockservice.NewMockIStaticCalculatorService(mockController)
-	staticStore := mockservice.NewMockIStaticStoreService(mockController)
+	staticCalculator, staticStore := prepareSearchServiceDependencies(mockController)
 
 	updatedTime := time.Now()
 
@@ -103,4 +87,11 @@ func TestSearchErrors(t *testing.T) {
 	assert.Equal("1", result[0].Bond.Id)
 	assert.Equal(datastuct.Optional[float64]{}, result[0].MaturityIncome)
 	assert.Equal(datastuct.Optional[float64]{}, result[0].CurrentIncome)
+}
+
+func prepareSearchServiceDependencies(mockController *gomock.Controller) (*mockservice.MockIStaticCalculatorService, *mockservice.MockIStaticStoreService) {
+	staticCalculator := mockservice.NewMockIStaticCalculatorService(mockController)
+	staticStore := mockservice.NewMockIStaticStoreService(mockController)
+
+	return staticCalculator, staticStore
 }

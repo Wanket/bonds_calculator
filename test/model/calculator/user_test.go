@@ -4,7 +4,7 @@ import (
 	"bonds_calculator/internal/model/calculator"
 	"bonds_calculator/internal/model/db"
 	"bonds_calculator/internal/model/moex"
-	asserts "github.com/stretchr/testify/assert"
+	"bonds_calculator/test"
 	"testing"
 )
 
@@ -14,9 +14,7 @@ var (
 )
 
 func TestCalcUserPercent(t *testing.T) {
-	t.Parallel()
-
-	assert := asserts.New(t)
+	assert, _ := test.PrepareTest(t)
 
 	userCalculator := calculator.NewUserCalculator(userBondization, userBuyHistory)
 	percent, err := userCalculator.CalcUserPercent(calculator.Maturity)
@@ -29,9 +27,7 @@ func TestCalcUserPercent(t *testing.T) {
 }
 
 func TestCalcUserPercentForOneBond(t *testing.T) {
-	t.Parallel()
-
-	assert := asserts.New(t)
+	assert, _ := test.PrepareTest(t)
 
 	userCalculator := calculator.NewUserCalculator(userBondization, userBuyHistory)
 	percent, err := userCalculator.CalcUserPercentForOneBond(parsedBondization.Id, calculator.Maturity)

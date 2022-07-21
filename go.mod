@@ -9,6 +9,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/google/gofuzz v1.2.0
 	github.com/google/wire v0.5.0
+	github.com/hymkor/go-lazy v0.0.0-20220318030802-e1f012df1dc1
 	github.com/mailru/easyjson v0.7.7
 	github.com/peteole/testdata-loader v0.3.0
 	github.com/sirupsen/logrus v1.8.1

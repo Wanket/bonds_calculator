@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+//go:generate mockgen -destination=mock/search_gen.go . ISearchService
 type ISearchService interface {
 	Search(query string) SearchResults
 }

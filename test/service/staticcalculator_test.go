@@ -7,29 +7,18 @@ import (
 	"bonds_calculator/internal/service"
 	mockservice "bonds_calculator/internal/service/mock"
 	"bonds_calculator/internal/util"
+	"bonds_calculator/test"
 	"fmt"
 	"github.com/benbjohnson/clock"
 	"github.com/golang/mock/gomock"
-	log "github.com/sirupsen/logrus"
-	asserts "github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"testing"
 	"time"
 )
 
 func TestStaticCalculator(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	assert, mockController := test.PrepareTest(t)
 
-	t.Parallel()
-
-	assert := asserts.New(t)
-
-	mockController := gomock.NewController(t)
-
-	staticStore := mockservice.NewMockIStaticStoreService(mockController)
-	mockClock := clock.NewMock()
-
-	calc := service.NewStaticCalculatorService(staticStore, mockClock)
+	calc, staticStore, _ := prepareStaticCalculator(mockController)
 
 	expectedAmotrizations := []moex.Amortization{
 		{
@@ -75,18 +64,9 @@ func TestStaticCalculator(t *testing.T) {
 }
 
 func TestStaticCalculatorErrors(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	assert, mockController := test.PrepareTest(t)
 
-	t.Parallel()
-
-	assert := asserts.New(t)
-
-	mockController := gomock.NewController(t)
-
-	staticStore := mockservice.NewMockIStaticStoreService(mockController)
-	mockClock := clock.NewMock()
-
-	calc := service.NewStaticCalculatorService(staticStore, mockClock)
+	calc, staticStore, mockClock := prepareStaticCalculator(mockController)
 
 	staticStore.EXPECT().GetBondization("1").Return(moex.Bondization{}, fmt.Errorf("error"))
 
@@ -138,4 +118,13 @@ func TestStaticCalculatorErrors(t *testing.T) {
 
 	assert.Error(err)
 	assert.Equal(0.0, result)
+}
+
+func prepareStaticCalculator(mockController *gomock.Controller) (service.IStaticCalculatorService, *mockservice.MockIStaticStoreService, *clock.Mock) {
+	staticStore := mockservice.NewMockIStaticStoreService(mockController)
+	mockClock := clock.NewMock()
+
+	calc := service.NewStaticCalculatorService(staticStore, mockClock)
+
+	return calc, staticStore, mockClock
 }

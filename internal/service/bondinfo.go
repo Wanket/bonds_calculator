@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+//go:generate mockgen -destination=mock/bondinfo_gen.go . IBondInfoService
 type IBondInfoService interface {
 	GetBondInfo(bondId string) (BondInfoResult, error)
 }
