@@ -5,8 +5,7 @@ tasks:
       - go mod download
   generate:
     cmds:
-      - go generate ./...
-      - go generate wire ./...
+      - go generate -tags wireinject ./...
   prepare:
     cmds:
       - task: dependencies
