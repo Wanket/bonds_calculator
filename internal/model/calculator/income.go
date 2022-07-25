@@ -61,6 +61,7 @@ func (calculator *IncomeCalculator) CalcPercentForOneBuyHistory(buyHistory db.Bu
 	calculator.recalculateCurrentCouponIfNeeded(couponInx, buyHistory)
 
 	avgCoupon := -1.0
+	accReturned := false
 	for ; couponInx < len(calculator.Coupons); couponInx++ {
 		coupon, exist := calculator.Coupons[couponInx].Value.Get()
 		if !exist {
@@ -69,6 +70,14 @@ func (calculator *IncomeCalculator) CalcPercentForOneBuyHistory(buyHistory db.Bu
 			}
 
 			coupon = avgCoupon
+		}
+
+		if !accReturned {
+			currentBuyPrice -= buyHistory.AccCoupon
+
+			coupon -= buyHistory.AccCoupon
+
+			accReturned = true
 		}
 
 		percent += coupon / currentBuyPrice
@@ -80,7 +89,7 @@ func (calculator *IncomeCalculator) CalcPercentForOneBuyHistory(buyHistory db.Bu
 
 		offsetNominalPercent := amortizationsSum / buyHistory.NominalValue
 
-		currentBuyPrice -= (buyHistory.Price + buyHistory.AccCoupon) * offsetNominalPercent
+		currentBuyPrice -= buyHistory.Price * offsetNominalPercent
 
 		if currentBuyPrice <= -0.0001 {
 			return 0, fmt.Errorf("wrong amortizations sum")
