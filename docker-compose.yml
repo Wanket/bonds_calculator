@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+
+  web:
+    build:
+        context: .
+        target: run
+    ports:
+      - "8080:8080"
+    links:
+      - redis
+      - postgres
+    restart: always
+
+  web-tests:
+    build:
+      context: .
+      target: test
+
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: bonds_calculator
+      POSTGRES_PASSWORD: bonds_calculator
+    ports:
+      - "127.0.0.1:5432:5432"

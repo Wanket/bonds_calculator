@@ -6,13 +6,18 @@ COPY client ./
 RUN yarn
 RUN yarn build
 
-FROM golang:1.18-alpine
+FROM golang:1.18-alpine as server
 RUN go install github.com/go-task/task/v3/cmd/task@latest
 
 WORKDIR /bonds_calculator
 COPY ./ ./
 
 RUN task prepare
+
+FROM server as test
+CMD ["task", "test"]
+
+FROM server as run
 RUN task build
 
 COPY --from=client /bonds_calculator_client/build/ ./out/public
