@@ -6,6 +6,7 @@ tasks:
   generate:
     cmds:
       - go generate ./...
+      - go generate wire ./...
   prepare:
     cmds:
       - task: dependencies
