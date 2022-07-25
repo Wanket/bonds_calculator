@@ -1,0 +1,3 @@
+[submodule "client"]
+	path = client
+	url = https://github.com/Wanket/bonds_calculator_client

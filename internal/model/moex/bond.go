@@ -76,7 +76,7 @@ func (bond *Bond) IsValid() error {
 }
 
 func (bond *Bond) AbsoluteCurrentPrice() float64 {
-	return bond.CurrentPricePercent * bond.Value
+	return bond.CurrentPricePercent * bond.Value / 100
 }
 
 func ParseBondsCp1251(buf []byte) ([]Bond, error) {

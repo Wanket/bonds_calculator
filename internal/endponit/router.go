@@ -25,12 +25,20 @@ func NewRouter(app *fiber.App, search *controller.SearchController, bondInfo *co
 func (router *Router) Configure() {
 	log.Info("Router: configuring")
 
+	router.configureStatic()
+
 	apiGroup := router.fiberApp.Group("/api")
 
-	staticGroup := apiGroup.Group("/static")
+	apiStaticGroup := apiGroup.Group("/static")
 
-	router.search.Configure(staticGroup)
-	router.bondInfo.Configure(staticGroup)
+	router.search.Configure(apiStaticGroup)
+	router.bondInfo.Configure(apiStaticGroup)
 
 	log.Info("Router: configured")
+}
+
+func (router *Router) configureStatic() {
+	router.fiberApp.Static("/", "./public")
+
+	router.fiberApp.Static("/page/*", "./public/index.html")
 }
