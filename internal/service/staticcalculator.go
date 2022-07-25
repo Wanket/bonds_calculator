@@ -9,7 +9,7 @@ import (
 	clock "github.com/benbjohnson/clock"
 )
 
-//go:generate mockgen -destination=mock/staticcalculator_gen.go . IStaticCalculatorService
+//go:generate go run github.com/golang/mock/mockgen -destination=mock/staticcalculator_gen.go . IStaticCalculatorService
 type IStaticCalculatorService interface {
 	CalcStaticStatisticForOneBond(bond moex.Bond, setting modelcalculator.IncomeSetting) (float64, error)
 }

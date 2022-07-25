@@ -15,7 +15,7 @@ const (
 	allBondizationUrl = "https://iss.moex.com/iss/securities/${bond}/bondization.csv?limit=unlimited&iss.meta=off&iss.only=amortizations,coupons&amortizations.columns=amortdate,value&coupons.columns=coupondate,value"
 )
 
-//go:generate mockgen -destination=mock/moexclient_gen.go . IMoexClient
+//go:generate go run github.com/golang/mock/mockgen -destination=mock/moexclient_gen.go . IMoexClient
 type IMoexClient interface {
 	Close() error
 

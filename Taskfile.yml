@@ -1,18 +1,21 @@
 version: "3"
 tasks:
-  build:
+  dependencies:
     cmds:
-      - go build -o out/app cmd/main.go
-  test:
-    cmds:
-      - go test -v ./...
+      - go mod download
   generate:
     cmds:
       - go generate ./...
   prepare:
     cmds:
-      - go mod download
-      - go mod vendor
+      - task: dependencies
+      - task: generate
+  build:
+    cmds:
+      - go build -o ./out/bc ./cmd/main.go
+  test:
+    cmds:
+      - go test -v ./...
   run:
     cmds:
-      - go run cmd/main.go
+      - go run ./...

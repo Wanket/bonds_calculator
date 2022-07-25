@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -destination=mock/staticstore_gen.go . IStaticStoreService
+//go:generate go run github.com/golang/mock/mockgen -destination=mock/staticstore_gen.go . IStaticStoreService
 type IStaticStoreService interface {
 	GetBonds() []moex.Bond
 	GetBondsWithUpdateTime() ([]moex.Bond, time.Time)

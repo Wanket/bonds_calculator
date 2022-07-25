@@ -1,4 +1,4 @@
-//go:generate easyjson $GOFILE
+//go:generate go run github.com/mailru/easyjson/easyjson $GOFILE
 package service
 
 import (
@@ -9,7 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//go:generate mockgen -destination=mock/bondinfo_gen.go . IBondInfoService
+//go:generate go run github.com/golang/mock/mockgen -destination=mock/bondinfo_gen.go . IBondInfoService
 type IBondInfoService interface {
 	GetBondInfo(bondId string) (BondInfoResult, error)
 }

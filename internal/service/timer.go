@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -destination=mock/timer_gen.go . ITimerService
+//go:generate go run github.com/golang/mock/mockgen -destination=mock/timer_gen.go . ITimerService
 type ITimerService interface {
 	SubscribeEvery(duration time.Duration, callback func())
 	SubscribeEveryStartFrom(duration time.Duration, startTime time.Time, callback func())

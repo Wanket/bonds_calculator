@@ -1,4 +1,4 @@
-//go:generate easyjson $GOFILE
+//go:generate go run github.com/mailru/easyjson/easyjson $GOFILE
 package service
 
 import (
@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -destination=mock/search_gen.go . ISearchService
+//go:generate go run github.com/golang/mock/mockgen -destination=mock/search_gen.go . ISearchService
 type ISearchService interface {
 	Search(query string) SearchResults
 }
