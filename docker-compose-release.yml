@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+
+  web-release:
+    image: ghcr.io/wanket/bonds_calculator:latest
+    ports:
+      - "8080:8080"
+    links:
+      - redis
+      - postgres
+    restart: always
+
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      - internal
+
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: bonds_calculator
+      POSTGRES_PASSWORD: bonds_calculator
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - internal
+
+networks:
+  internal:
+    internal: true
