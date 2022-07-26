@@ -51,7 +51,7 @@ type SearchResults []SearchResult
 
 func (search *SearchService) Search(query string) SearchResults {
 	if updatedTime := search.searcherUpdatedTime.SafeRead(); updatedTime.Before(search.staticStore.GetBondsChangedTime()) {
-		go search.reloadSearcherGroup.Do("reloadSearcher", func() (interface{}, error) {
+		search.reloadSearcherGroup.Do("reloadSearcher", func() (interface{}, error) {
 			search.reloadSearcher()
 
 			return nil, nil
