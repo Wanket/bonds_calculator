@@ -5,7 +5,7 @@ import (
 )
 
 type BuyHistory struct {
-	BondId       string
+	BondID       string
 	Count        uint
 	Date         time.Time
 	Price        float64

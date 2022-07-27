@@ -4,8 +4,8 @@ package service
 import (
 	"bonds_calculator/internal/model"
 	"bonds_calculator/internal/model/calculator"
-	"bonds_calculator/internal/model/datastuct"
-	"bonds_calculator/internal/model/datastuct/box"
+	"bonds_calculator/internal/model/datastruct"
+	"bonds_calculator/internal/model/datastruct/box"
 	"bonds_calculator/internal/model/moex"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/singleflight"
@@ -27,10 +27,15 @@ type SearchService struct {
 	reloadSearcherGroup singleflight.Group
 }
 
-func NewSearchService(staticCalculator IStaticCalculatorService, staticStore IStaticStoreService) ISearchService {
+func NewSearchService(staticCalculator IStaticCalculatorService, staticStore IStaticStoreService) *SearchService {
 	service := SearchService{
 		staticCalculator: staticCalculator,
 		staticStore:      staticStore,
+
+		searcher:            box.ConcurrentBox[model.BondSearcher]{},
+		searcherUpdatedTime: box.ConcurrentBox[time.Time]{},
+
+		reloadSearcherGroup: singleflight.Group{},
 	}
 
 	service.reloadSearcher()
@@ -42,8 +47,8 @@ func NewSearchService(staticCalculator IStaticCalculatorService, staticStore ISt
 type SearchResult struct {
 	Bond moex.Bond
 
-	MaturityIncome datastuct.Optional[float64]
-	CurrentIncome  datastuct.Optional[float64]
+	MaturityIncome datastruct.Optional[float64]
+	CurrentIncome  datastruct.Optional[float64]
 }
 
 //easyjson:json
@@ -51,10 +56,10 @@ type SearchResults []SearchResult
 
 func (search *SearchService) Search(query string) SearchResults {
 	if updatedTime := search.searcherUpdatedTime.SafeRead(); updatedTime.Before(search.staticStore.GetBondsChangedTime()) {
-		search.reloadSearcherGroup.Do("reloadSearcher", func() (interface{}, error) {
+		_, _, _ = search.reloadSearcherGroup.Do("reloadSearcher", func() (interface{}, error) {
 			search.reloadSearcher()
 
-			return nil, nil
+			return nil, nil //nolint:nilnil
 		})
 	}
 
@@ -63,30 +68,36 @@ func (search *SearchService) Search(query string) SearchResults {
 	foundBonds := searcher.Search(query)
 
 	searchResults := make([]SearchResult, 0, len(foundBonds))
+
 	for _, bond := range foundBonds {
-		searchResult := SearchResult{
-			Bond: bond,
-		}
+		var maturityIncome datastruct.Optional[float64]
 
 		if maturity, err := search.staticCalculator.CalcStaticStatisticForOneBond(bond, calculator.Maturity); err != nil {
 			log.WithFields(log.Fields{
-				"bondId":     bond.Id,
+				"bondId":     bond.ID,
 				log.ErrorKey: err,
 			}).Errorf("SearchService: can't calculate static maturity income")
 		} else {
-			searchResult.MaturityIncome.Set(maturity)
+			maturityIncome.Set(maturity)
 		}
+
+		var currentIncome datastruct.Optional[float64]
 
 		if current, err := search.staticCalculator.CalcStaticStatisticForOneBond(bond, calculator.Current); err != nil {
 			log.WithFields(log.Fields{
-				"bondId":     bond.Id,
+				"bondId":     bond.ID,
 				log.ErrorKey: err,
 			}).Errorf("SearchService: can't calculate static current income")
 		} else {
-			searchResult.CurrentIncome.Set(current)
+			currentIncome.Set(current)
 		}
 
-		searchResults = append(searchResults, searchResult)
+		searchResults = append(searchResults, SearchResult{
+			Bond: bond,
+
+			MaturityIncome: maturityIncome,
+			CurrentIncome:  currentIncome,
+		})
 	}
 
 	return searchResults

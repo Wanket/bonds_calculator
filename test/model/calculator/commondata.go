@@ -1,3 +1,4 @@
+//nolint:gomnd
 package calculator
 
 import (
@@ -7,21 +8,9 @@ import (
 	testdataloader "github.com/peteole/testdata-loader"
 )
 
-var (
-	bondizationVariableData = testdataloader.GetTestFile("test/data/moex/bondization_variable.csv")
-	bondsVariableData       = testdataloader.GetTestFile("test/data/moex/bond_variable.csv")
-
-	bondizationVariable = loadBondizationVariable()
-	buyHistoryVariable  = loadBuyHistoryVariable()
-
-	buyHistory         = loadBuyHistory()
-	multiplyBuyHistory = loadMultiplyBuyHistory()
-	parsedBondization  = testmoex.LoadParsedBondization()
-)
-
-func loadBuyHistoryVariable() db.BuyHistory {
+func LoadBuyHistoryVariable() db.BuyHistory {
 	return db.BuyHistory{
-		BondId:       "SU24021RMFS6",
+		BondID:       "SU24021RMFS6",
 		Date:         testmoex.ParseDate("2022-06-23"),
 		Price:        999.53,
 		AccCoupon:    20.86,
@@ -30,9 +19,9 @@ func loadBuyHistoryVariable() db.BuyHistory {
 	}
 }
 
-func loadBuyHistory() db.BuyHistory {
+func LoadBuyHistory() db.BuyHistory {
 	return db.BuyHistory{
-		BondId:       "RU000A100TL1",
+		BondID:       "RU000A100TL1",
 		Date:         testmoex.ParseDate("2022-06-21"),
 		Price:        4998.2,
 		AccCoupon:    38.26,
@@ -41,10 +30,10 @@ func loadBuyHistory() db.BuyHistory {
 	}
 }
 
-func loadMultiplyBuyHistory() []db.BuyHistory {
+func LoadMultiplyBuyHistory() []db.BuyHistory {
 	return []db.BuyHistory{
 		{
-			BondId:       "RU000A100TL1",
+			BondID:       "RU000A100TL1",
 			Date:         testmoex.ParseDate("2022-06-09"),
 			Price:        4999.83,
 			AccCoupon:    16.11,
@@ -52,7 +41,7 @@ func loadMultiplyBuyHistory() []db.BuyHistory {
 			Count:        2,
 		},
 		{
-			BondId:       "RU000A100TL1",
+			BondID:       "RU000A100TL1",
 			Date:         testmoex.ParseDate("2022-05-26"),
 			Price:        5203.946,
 			AccCoupon:    51.68,
@@ -62,9 +51,20 @@ func loadMultiplyBuyHistory() []db.BuyHistory {
 	}
 }
 
-func loadBondizationVariable() moex.Bondization {
-	bonds, _ := moex.ParseBondsCp1251(bondsVariableData)
-	bondizations, _ := moex.ParseBondization(bonds[0].Id, bondizationVariableData)
+func LoadBondizationVariable() moex.Bondization {
+	bonds, err := moex.ParseBondsCp1251(testdataloader.GetTestFile("test/data/moex/bond_variable.csv"))
+	if err != nil {
+		panic(err)
+	}
+
+	bondizations, err := moex.ParseBondization(
+		bonds[0].ID,
+		testdataloader.GetTestFile("test/data/moex/bondization_variable.csv"),
+	)
+
+	if err != nil {
+		panic(err)
+	}
 
 	return bondizations
 }

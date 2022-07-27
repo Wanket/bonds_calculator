@@ -1,8 +1,8 @@
-package calculator
+package calculator_test
 
 import (
 	"bonds_calculator/internal/model/calculator"
-	"bonds_calculator/internal/model/datastuct"
+	"bonds_calculator/internal/model/datastruct"
 	"bonds_calculator/internal/model/db"
 	gofuzz "github.com/google/gofuzz"
 	asserts "github.com/stretchr/testify/assert"
@@ -39,7 +39,7 @@ func FuzzCalcStatistic(f *testing.F) {
 		statisticCalculator := calculator.NewStatisticCalculator(income)
 		result := statisticCalculator.CalcStatistic()
 
-		assert.True(slices.IsSortedFunc(result, func(left, right datastuct.Pair[time.Time, float64]) bool {
+		assert.True(slices.IsSortedFunc(result, func(left, right datastruct.Pair[time.Time, float64]) bool {
 			return left.Key.Sub(right.Key).Hours()/24 < 0
 		}), "result is not sorted")
 	})
@@ -67,7 +67,7 @@ func FuzzCalcStatisticByDate(f *testing.F) {
 		statisticCalculator := calculator.NewStatisticCalculator(testData.Income)
 		result := statisticCalculator.CalcStatisticByDate(testData.StartDate, testData.EndDate)
 
-		assert.True(slices.IsSortedFunc(result, func(left, right datastuct.Pair[time.Time, float64]) bool {
+		assert.True(slices.IsSortedFunc(result, func(left, right datastruct.Pair[time.Time, float64]) bool {
 			return left.Key.Sub(right.Key).Hours()/24 < 0
 		}), "result is not sorted")
 	})

@@ -1,4 +1,4 @@
-package datastuct
+package datastruct
 
 type Pair[K, V any] struct {
 	Key   K

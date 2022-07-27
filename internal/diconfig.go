@@ -17,31 +17,31 @@ import (
 
 // functions which are crating New instances
 
-func newTimerService() service.ITimerService {
+func newTimerService() *service.TimerService {
 	wire.Build(service.NewTimerService, clock.New)
 
 	return &service.TimerService{}
 }
 
-func newStaticStoreService(queueSize int) service.IStaticStoreService {
-	wire.Build(service.NewStaticStoreService, getSingleTimeService, api.NewMoexClient, clock.New)
+func newStaticStoreService() *service.StaticStoreService {
+	wire.Build(service.NewStaticStoreService, getSingleMoexClient, getSingleTimeService, getSingleTimeHelper)
 
 	return &service.StaticStoreService{}
 }
 
-func newStaticCalculatorService() service.IStaticCalculatorService {
-	wire.Build(service.NewStaticCalculatorService, getSingleStaticStoreService, clock.New)
+func newStaticCalculatorService() *service.StaticCalculatorService {
+	wire.Build(service.NewStaticCalculatorService, getSingleStaticStoreService, getSingleTimeHelper)
 
 	return &service.StaticCalculatorService{}
 }
 
-func newSearchService() service.ISearchService {
+func newSearchService() *service.SearchService {
 	wire.Build(service.NewSearchService, getSingleStaticCalculatorService, getSingleStaticStoreService)
 
 	return &service.SearchService{}
 }
 
-func newBondInfoService() service.IBondInfoService {
+func newBondInfoService() *service.BondInfoService {
 	wire.Build(service.NewBondInfoService, getSingleStaticCalculatorService, getSingleStaticStoreService)
 
 	return &service.BondInfoService{}
@@ -60,21 +60,50 @@ func newBondInfoController() *controller.BondInfoController {
 }
 
 func newApplication() *Application {
-	wire.Build(NewApplication, endponit.NewRouter, endponit.NewFiberApp, getSingleSearchController, getSingleBondInfoController)
+	wire.Build(
+		NewApplication,
+		endponit.NewRouter,
+		endponit.NewFiberApp,
+		getSingleSearchController,
+		getSingleBondInfoController,
+		getSingleConfig,
+	)
 
 	return &Application{}
+}
+
+func newGlobalConfig() *util.GlobalConfig {
+	wire.Build(util.NewGlobalConfig)
+
+	return &util.GlobalConfig{}
+}
+
+func newTimeHelper() *util.TimeHelper {
+	wire.Build(util.NewTimeHelper, clock.New)
+
+	return &util.TimeHelper{}
+}
+
+func newMoexClient(queueSize int) *api.MoexClient {
+	wire.Build(api.NewMoexClient)
+
+	return &api.MoexClient{}
 }
 
 // singleton objects
 
 var (
+	config     = lazy.New(newGlobalConfig)
+	timeHelper = lazy.New(newTimeHelper)
+	moexClient = lazy.New(func() *api.MoexClient {
+		return newMoexClient(getSingleConfig().MoexClientQueueSize())
+	})
+
 	searchService           = lazy.New(newSearchService)
 	bondInfoService         = lazy.New(newBondInfoService)
 	staticCalculatorService = lazy.New(newStaticCalculatorService)
 	timeService             = lazy.New(newTimerService)
-	staticStoreService      = lazy.New(func() service.IStaticStoreService {
-		return newStaticStoreService(util.GetGlobalConfig().MoexClientQueueSize())
-	})
+	staticStoreService      = lazy.New(newStaticStoreService)
 
 	searchController   = lazy.New(newSearchController)
 	bondInfoController = lazy.New(newBondInfoController)
@@ -114,4 +143,16 @@ func getSingleSearchController() *controller.SearchController {
 
 func getSingleBondInfoController() *controller.BondInfoController {
 	return bondInfoController.Value()
+}
+
+func getSingleConfig() util.IGlobalConfig {
+	return config.Value()
+}
+
+func getSingleTimeHelper() util.ITimeHelper {
+	return timeHelper.Value()
+}
+
+func getSingleMoexClient() api.IMoexClient {
+	return moexClient.Value()
 }

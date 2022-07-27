@@ -15,7 +15,7 @@ const (
 type IncomeType int
 
 type Income struct {
-	BondId     string
+	BondID     string
 	IncomeType IncomeType
 	Value      float64
 	Date       time.Time

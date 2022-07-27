@@ -3,7 +3,8 @@ package calculator
 import (
 	"bonds_calculator/internal/model/db"
 	"bonds_calculator/internal/model/moex"
-	"fmt"
+	"bonds_calculator/internal/util"
+	"errors"
 	"time"
 )
 
@@ -26,9 +27,14 @@ func NewIncomeCalculator(bondization *moex.Bondization) IncomeCalculator {
 	}
 }
 
+var errNoBuyHistoryWithPositiveCount = errors.New("no buy history with count > 0")
+
 func (calculator *IncomeCalculator) CalcPercent(buyHistory []db.BuyHistory, setting IncomeSetting) (float64, error) {
-	percent := 0.0
-	var sumCount uint = 0
+	var (
+		percent       = 0.0
+		sumCount uint = 0
+	)
+
 	for _, buy := range buyHistory {
 		oneHistoryPercent, err := calculator.CalcPercentForOneBuyHistory(buy, setting)
 		if err != nil {
@@ -41,13 +47,18 @@ func (calculator *IncomeCalculator) CalcPercent(buyHistory []db.BuyHistory, sett
 	}
 
 	if sumCount == 0 {
-		return 0, fmt.Errorf("no buy history with count > 0")
+		return 0, errNoBuyHistoryWithPositiveCount
 	}
 
 	return percent / float64(sumCount), nil
 }
 
-func (calculator *IncomeCalculator) CalcPercentForOneBuyHistory(buyHistory db.BuyHistory, setting IncomeSetting) (float64, error) {
+var errWrongAmortizationsSum = errors.New("wrong amortizations sum")
+
+func (calculator *IncomeCalculator) CalcPercentForOneBuyHistory(
+	buyHistory db.BuyHistory,
+	setting IncomeSetting,
+) (float64, error) {
 	currentBuyPrice := buyHistory.Price + buyHistory.AccCoupon
 
 	percent := 0.0
@@ -62,6 +73,7 @@ func (calculator *IncomeCalculator) CalcPercentForOneBuyHistory(buyHistory db.Bu
 
 	avgCoupon := -1.0
 	accReturned := false
+
 	for ; couponInx < len(calculator.Coupons); couponInx++ {
 		coupon, exist := calculator.Coupons[couponInx].Value.Get()
 		if !exist {
@@ -82,17 +94,14 @@ func (calculator *IncomeCalculator) CalcPercentForOneBuyHistory(buyHistory db.Bu
 
 		percent += coupon / currentBuyPrice
 
-		amortizationsSum := 0.0
-		for ; amortizationInx < len(calculator.Amortizations) && !calculator.Amortizations[amortizationInx].Date.After(calculator.Coupons[couponInx].Date); amortizationInx++ {
-			amortizationsSum += calculator.Amortizations[amortizationInx].Value
-		}
+		amortizationsSum := calculator.calculateAmortizationSum(&amortizationInx, couponInx)
 
 		offsetNominalPercent := amortizationsSum / buyHistory.NominalValue
 
 		currentBuyPrice -= buyHistory.Price * offsetNominalPercent
 
 		if currentBuyPrice <= -0.0001 {
-			return 0, fmt.Errorf("wrong amortizations sum")
+			return 0, errWrongAmortizationsSum
 		}
 	}
 
@@ -103,8 +112,23 @@ func (calculator *IncomeCalculator) CalcPercentForOneBuyHistory(buyHistory db.Bu
 	return calcRelativePercent(percent, buyHistory.Date, calculator.Amortizations[amortizationInx].Date), nil
 }
 
+func (calculator *IncomeCalculator) calculateAmortizationSum(amortizationInx *int, couponInx int) float64 {
+	amortizationsSum := 0.0
+
+	for ; *amortizationInx < len(calculator.Amortizations); *amortizationInx++ {
+		if calculator.Amortizations[*amortizationInx].Date.After(calculator.Coupons[couponInx].Date) {
+			break
+		}
+
+		amortizationsSum += calculator.Amortizations[*amortizationInx].Value
+	}
+
+	return amortizationsSum
+}
+
 func (calculator *IncomeCalculator) recalculateCurrentCouponIfNeeded(couponInx int, buyHistory db.BuyHistory) {
-	if _, exist := calculator.Coupons[couponInx].Value.Get(); !exist && 0 < couponInx && couponInx < len(calculator.Coupons) {
+	_, exist := calculator.Coupons[couponInx].Value.Get()
+	if !exist && 0 < couponInx && couponInx < len(calculator.Coupons) {
 		startDay := calculator.Coupons[couponInx-1].Date
 		endDay := calculator.Coupons[couponInx].Date
 
@@ -113,22 +137,24 @@ func (calculator *IncomeCalculator) recalculateCurrentCouponIfNeeded(couponInx i
 		}
 
 		calculatedNextCoupon := buyHistory.AccCoupon /
-			(buyHistory.Date.Sub(startDay).Hours() / 24) *
-			(endDay.Sub(startDay).Hours() / 24)
+			(buyHistory.Date.Sub(startDay).Hours() / util.DayMultiplier) *
+			(endDay.Sub(startDay).Hours() / util.DayMultiplier)
 
 		calculator.Coupons[couponInx].Value.Set(calculatedNextCoupon)
 	}
 }
 
 func calcAvgCoupon(coupons []moex.Coupon) float64 {
-	var sum float64
+	sum := .0
 	count := 0
+
 	for _, coupon := range coupons {
 		if val, exist := coupon.Value.Get(); exist {
 			sum += val
 			count++
 		}
 	}
+
 	return sum / float64(count)
 }
 
@@ -151,5 +177,5 @@ func getAmortizationsAfterBuyDate(buyDate time.Time, amortizations []moex.Amorti
 }
 
 func calcRelativePercent(percent float64, startDate time.Time, endDate time.Time) float64 {
-	return percent * 365 / (endDate.Sub(startDate).Hours() / 24)
+	return percent * 365 / (endDate.Sub(startDate).Hours() / util.DayMultiplier)
 }

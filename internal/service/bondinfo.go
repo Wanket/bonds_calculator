@@ -3,7 +3,7 @@ package service
 
 import (
 	"bonds_calculator/internal/model/calculator"
-	"bonds_calculator/internal/model/datastuct"
+	"bonds_calculator/internal/model/datastruct"
 	"bonds_calculator/internal/model/moex"
 	"fmt"
 	log "github.com/sirupsen/logrus"
@@ -11,7 +11,7 @@ import (
 
 //go:generate go run github.com/golang/mock/mockgen -destination=mock/bondinfo_gen.go . IBondInfoService
 type IBondInfoService interface {
-	GetBondInfo(bondId string) (BondInfoResult, error)
+	GetBondInfo(bondID string) (BondInfoResult, error)
 }
 
 type BondInfoService struct {
@@ -19,7 +19,7 @@ type BondInfoService struct {
 	staticStore      IStaticStoreService
 }
 
-func NewBondInfoService(staticCalculator IStaticCalculatorService, staticStore IStaticStoreService) IBondInfoService {
+func NewBondInfoService(staticCalculator IStaticCalculatorService, staticStore IStaticStoreService) *BondInfoService {
 	return &BondInfoService{
 		staticCalculator: staticCalculator,
 		staticStore:      staticStore,
@@ -31,44 +31,52 @@ type BondInfoResult struct {
 	Bond        moex.Bond
 	Bondization moex.Bondization
 
-	MaturityIncome datastuct.Optional[float64]
-	CurrentIncome  datastuct.Optional[float64]
+	MaturityIncome datastruct.Optional[float64]
+	CurrentIncome  datastruct.Optional[float64]
 }
 
-func (infoService *BondInfoService) GetBondInfo(bondId string) (BondInfoResult, error) {
-	bondInfoResult := BondInfoResult{}
-
-	bond, err := infoService.staticStore.GetBondById(bondId)
+func (infoService *BondInfoService) GetBondInfo(bondID string) (BondInfoResult, error) {
+	bond, err := infoService.staticStore.GetBondByID(bondID)
 	if err != nil {
-		return bondInfoResult, fmt.Errorf("cannot get bond info, error: %v", err)
+		return BondInfoResult{}, fmt.Errorf("cannot get bond info, error: %w", err)
 	}
 
-	bondInfoResult.Bond = bond
-
-	bondization, err := infoService.staticStore.GetBondization(bondId)
+	bondization, err := infoService.staticStore.GetBondization(bondID)
 	if err != nil {
-		return bondInfoResult, fmt.Errorf("cannot get bond info, error: %v", err)
+		return BondInfoResult{
+			Bond:           bond,
+			Bondization:    moex.Bondization{},
+			MaturityIncome: datastruct.Optional[float64]{},
+			CurrentIncome:  datastruct.Optional[float64]{},
+		}, fmt.Errorf("cannot get bond info, error: %w", err)
 	}
 
-	bondInfoResult.Bondization = bondization
+	var maturityIncome datastruct.Optional[float64]
 
 	if maturity, err := infoService.staticCalculator.CalcStaticStatisticForOneBond(bond, calculator.Maturity); err != nil {
 		log.WithFields(log.Fields{
-			"bondId":     bondId,
+			"bondId":     bondID,
 			log.ErrorKey: err,
 		}).Errorf("BondInfoService: can't calculate static maturity income")
 	} else {
-		bondInfoResult.MaturityIncome.Set(maturity)
+		maturityIncome.Set(maturity)
 	}
+
+	var currentIncome datastruct.Optional[float64]
 
 	if current, err := infoService.staticCalculator.CalcStaticStatisticForOneBond(bond, calculator.Current); err != nil {
 		log.WithFields(log.Fields{
-			"bondId":     bondId,
+			"bondId":     bondID,
 			log.ErrorKey: err,
 		}).Errorf("BondInfoService: can't calculate static current income")
 	} else {
-		bondInfoResult.CurrentIncome.Set(current)
+		currentIncome.Set(current)
 	}
 
-	return bondInfoResult, nil
+	return BondInfoResult{
+		Bond:           bond,
+		Bondization:    bondization,
+		MaturityIncome: maturityIncome,
+		CurrentIncome:  currentIncome,
+	}, nil
 }

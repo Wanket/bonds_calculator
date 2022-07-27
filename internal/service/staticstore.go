@@ -2,11 +2,10 @@ package service
 
 import (
 	"bonds_calculator/internal/api"
-	"bonds_calculator/internal/model/datastuct/box"
+	"bonds_calculator/internal/model/datastruct/box"
 	"bonds_calculator/internal/model/moex"
 	"bonds_calculator/internal/util"
 	"fmt"
-	"github.com/benbjohnson/clock"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
@@ -15,7 +14,7 @@ import (
 type IStaticStoreService interface {
 	GetBonds() []moex.Bond
 	GetBondsWithUpdateTime() ([]moex.Bond, time.Time)
-	GetBondById(id string) (moex.Bond, error)
+	GetBondByID(id string) (moex.Bond, error)
 	GetBondsChangedTime() time.Time
 
 	GetBondization(id string) (moex.Bondization, error)
@@ -29,21 +28,32 @@ type StaticStoreService struct {
 	bondsMap     box.ConcurrentBox[map[string]moex.Bond]
 	bondizations box.ConcurrentCacheBox[map[string]moex.Bondization]
 
-	clock clock.Clock
+	timeHelper util.ITimeHelper
 }
 
-func NewStaticStoreService(client api.IMoexClient, timer ITimerService, clock clock.Clock) IStaticStoreService {
+func NewStaticStoreService(
+	client api.IMoexClient,
+	timer ITimerService,
+	timeHelper util.ITimeHelper,
+) *StaticStoreService {
 	staticStore := StaticStoreService{
 		client: client,
 
-		clock: clock,
+		bonds:        box.ConcurrentCacheBox[[]moex.Bond]{},
+		bondsMap:     box.ConcurrentBox[map[string]moex.Bond]{},
+		bondizations: box.ConcurrentCacheBox[map[string]moex.Bondization]{},
+
+		timeHelper: timeHelper,
 	}
 
 	staticStore.reloadBond()
 	staticStore.reloadBondization()
 
-	timer.SubscribeEvery(time.Minute*5, staticStore.reloadBond)
-	timer.SubscribeEveryStartFrom(time.Hour*24, util.GetMoexMidnight(staticStore.clock).Add(time.Hour*24), staticStore.reloadBondization)
+	timer.SubscribeEvery(time.Minute*5, staticStore.reloadBond) //nolint:gomnd
+	timer.SubscribeEveryStartFrom(
+		util.Day,
+		staticStore.timeHelper.GetMoexMidnight().Add(util.Day), staticStore.reloadBondization,
+	)
 
 	return &staticStore
 }
@@ -60,21 +70,25 @@ func (staticStore *StaticStoreService) GetBondsWithUpdateTime() ([]moex.Bond, ti
 	return result, updateTime
 }
 
-func (staticStore *StaticStoreService) GetBondById(id string) (moex.Bond, error) {
+var errBondByIDNotFound = fmt.Errorf("bond by id not found")
+
+func (staticStore *StaticStoreService) GetBondByID(id string) (moex.Bond, error) {
 	result, exist := staticStore.bondsMap.SafeRead()[id]
 
 	if !exist {
-		return moex.Bond{}, fmt.Errorf("bond with id: %s not found", id)
+		return moex.Bond{}, fmt.Errorf("GetBondByID: %w, id: %s", errBondByIDNotFound, id)
 	}
 
 	return result, nil
 }
 
+var errBondizationByIDNotFound = fmt.Errorf("bondization by id not found")
+
 func (staticStore *StaticStoreService) GetBondization(id string) (moex.Bondization, error) {
 	result, exist := staticStore.bondizations.SafeRead()[id]
 
 	if !exist {
-		return moex.Bondization{}, fmt.Errorf("bondization with id: %s not found", id)
+		return moex.Bondization{}, fmt.Errorf("GetBondization: %w, id: %s", errBondizationByIDNotFound, id)
 	}
 
 	return result, nil
@@ -103,21 +117,21 @@ func (staticStore *StaticStoreService) reloadBond() {
 		bonds, err = staticStore.client.GetBonds()
 	}
 
-	for i, end := 0, len(bonds); i < end; i++ {
-		if err := bonds[i].IsValid(); err != nil { // impossible cause of tests but just in case
+	for bondInx, end := 0, len(bonds); bondInx < end; bondInx++ {
+		if err := bonds[bondInx].IsValid(); err != nil { // impossible cause of tests but just in case
 			log.WithFields(log.Fields{
-				"bond":       bonds[i],
+				"bond":       bonds[bondInx],
 				log.ErrorKey: err,
 			}).Errorf("StaticStoreService: got invalid bond")
 
-			bonds[i] = bonds[end-1]
+			bonds[bondInx] = bonds[end-1]
 			bonds = bonds[:end-1]
-			i--
+			bondInx--
 			end--
 		}
 	}
 
-	staticStore.bondsMap.Set(util.SliceToMapBy(bonds, func(bond moex.Bond) string { return bond.Id }))
+	staticStore.bondsMap.Set(util.SliceToMapBy(bonds, func(bond moex.Bond) string { return bond.ID }))
 	staticStore.bonds.Set(bonds)
 
 	log.WithField("count", len(bonds)).Info("StaticStoreService: bonds updated")
@@ -130,8 +144,8 @@ func (staticStore *StaticStoreService) reloadBondization() {
 
 	bondizations := make(map[string]moex.Bondization, len(bonds))
 
-	for i, bond := range bonds {
-		bondization, err := staticStore.client.GetBondization(bond.Id)
+	for bondInx, bond := range bonds {
+		bondization, err := staticStore.client.GetBondization(bond.ID)
 
 		for tryCount := 0; err != nil && tryCount < 5; tryCount++ {
 			log.WithFields(log.Fields{
@@ -140,7 +154,7 @@ func (staticStore *StaticStoreService) reloadBondization() {
 				"tryCount":   tryCount,
 			}).Errorf("StaticStoreService: error while updating bondization, retrying...")
 
-			bondization, err = staticStore.client.GetBondization(bond.Id)
+			bondization, err = staticStore.client.GetBondization(bond.ID)
 		}
 
 		if err != nil {
@@ -162,10 +176,10 @@ func (staticStore *StaticStoreService) reloadBondization() {
 			continue
 		}
 
-		bondizations[bond.Id] = bondization
+		bondizations[bond.ID] = bondization
 
-		if i%200 == 0 {
-			log.WithField("i", i).Info("StaticStoreService: updating bondizations...")
+		if bondInx%200 == 0 {
+			log.WithField("bondInx", bondInx).Info("StaticStoreService: updating bondizations...")
 		}
 	}
 

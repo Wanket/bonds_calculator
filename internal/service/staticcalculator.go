@@ -6,7 +6,6 @@ import (
 	"bonds_calculator/internal/model/moex"
 	"bonds_calculator/internal/util"
 	"fmt"
-	clock "github.com/benbjohnson/clock"
 )
 
 //go:generate go run github.com/golang/mock/mockgen -destination=mock/staticcalculator_gen.go . IStaticCalculatorService
@@ -17,34 +16,41 @@ type IStaticCalculatorService interface {
 type StaticCalculatorService struct {
 	staticStoreService IStaticStoreService
 
-	clock clock.Clock
+	timeHelper util.ITimeHelper
 }
 
-func NewStaticCalculatorService(staticStoreService IStaticStoreService, clock clock.Clock) IStaticCalculatorService {
+func NewStaticCalculatorService(
+	staticStoreService IStaticStoreService,
+	timeHelper util.ITimeHelper,
+) *StaticCalculatorService {
 	return &StaticCalculatorService{
 		staticStoreService: staticStoreService,
-		clock:              clock,
+
+		timeHelper: timeHelper,
 	}
 }
 
-func (staticCalculatorService *StaticCalculatorService) CalcStaticStatisticForOneBond(bond moex.Bond, setting modelcalculator.IncomeSetting) (float64, error) {
-	bondization, err := staticCalculatorService.staticStoreService.GetBondization(bond.Id)
+func (staticCalculatorService *StaticCalculatorService) CalcStaticStatisticForOneBond(
+	bond moex.Bond,
+	setting modelcalculator.IncomeSetting,
+) (float64, error) {
+	bondization, err := staticCalculatorService.staticStoreService.GetBondization(bond.ID)
 	if err != nil {
-		return 0, fmt.Errorf("cannot calculate statistic for bond, error: %v", err)
+		return 0, fmt.Errorf("cannot calculate statistic for bond, error: %w", err)
 	}
 
 	calculator := modelcalculator.NewIncomeCalculator(&bondization)
 	result, err := calculator.CalcPercentForOneBuyHistory(db.BuyHistory{
-		BondId:       bond.Id,
+		BondID:       bond.ID,
 		Count:        1,
-		Date:         util.GetMoexNow(staticCalculatorService.clock),
+		Date:         staticCalculatorService.timeHelper.GetMoexNow(),
 		Price:        bond.AbsoluteCurrentPrice(),
 		AccCoupon:    bond.AccCoupon,
 		NominalValue: bond.Value,
 	}, setting)
 
 	if err != nil {
-		return 0, fmt.Errorf("cannot calculate statistic for bond, error: %v", err)
+		return 0, fmt.Errorf("cannot calculate statistic for bond, error: %w", err)
 	}
 
 	return result, nil

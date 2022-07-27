@@ -1,14 +1,13 @@
-package service
+package service_test
 
 import (
-	calculator "bonds_calculator/internal/model/calculator"
-	"bonds_calculator/internal/model/datastuct"
+	"bonds_calculator/internal/model/calculator"
+	"bonds_calculator/internal/model/datastruct"
 	"bonds_calculator/internal/model/moex"
 	"bonds_calculator/internal/service"
 	mockservice "bonds_calculator/internal/service/mock"
 	"bonds_calculator/internal/util"
 	"bonds_calculator/test"
-	"fmt"
 	"github.com/benbjohnson/clock"
 	"github.com/golang/mock/gomock"
 	"testing"
@@ -34,22 +33,22 @@ func TestStaticCalculator(t *testing.T) {
 	expectedCoupons := []moex.Coupon{
 		{
 			Date:  time.Time{}.AddDate(0, 0, 10),
-			Value: datastuct.NewOptional(30.0),
+			Value: datastruct.NewOptional(30.0),
 		},
 		{
 			Date:  time.Time{}.AddDate(0, 0, 20),
-			Value: datastuct.Optional[float64]{},
+			Value: datastruct.Optional[float64]{},
 		},
 	}
 
 	staticStore.EXPECT().GetBondization("1").Return(moex.Bondization{
-		Id:            "1",
+		ID:            "1",
 		Amortizations: expectedAmotrizations,
 		Coupons:       expectedCoupons,
 	}, nil)
 
 	result, err := calc.CalcStaticStatisticForOneBond(moex.Bond{
-		Id: "1",
+		ID: "1",
 		MarketDataPart: moex.MarketDataPart{
 			CurrentPricePercent: 10.0,
 		},
@@ -66,12 +65,12 @@ func TestStaticCalculator(t *testing.T) {
 func TestStaticCalculatorErrors(t *testing.T) {
 	assert, mockController := test.PrepareTest(t)
 
-	calc, staticStore, mockClock := prepareStaticCalculator(mockController)
+	calc, staticStore, timeHelper := prepareStaticCalculator(mockController)
 
-	staticStore.EXPECT().GetBondization("1").Return(moex.Bondization{}, fmt.Errorf("error"))
+	staticStore.EXPECT().GetBondization("1").Return(moex.Bondization{}, test.ErrTest)
 
 	result, err := calc.CalcStaticStatisticForOneBond(moex.Bond{
-		Id: "1",
+		ID: "1",
 	}, calculator.Maturity)
 
 	assert.Error(err)
@@ -79,34 +78,34 @@ func TestStaticCalculatorErrors(t *testing.T) {
 
 	expectedAmotrizations := []moex.Amortization{
 		{
-			Date:  util.GetMoexNow(mockClock).AddDate(0, 0, 10),
+			Date:  timeHelper.GetMoexNow().AddDate(0, 0, 10),
 			Value: 10,
 		},
 		{
-			Date:  util.GetMoexNow(mockClock).AddDate(0, 0, 20),
+			Date:  timeHelper.GetMoexNow().AddDate(0, 0, 20),
 			Value: 20,
 		},
 	}
 
 	expectedCoupons := []moex.Coupon{
 		{
-			Date:  util.GetMoexNow(mockClock).AddDate(0, 0, 10),
-			Value: datastuct.NewOptional(30.0),
+			Date:  timeHelper.GetMoexNow().AddDate(0, 0, 10),
+			Value: datastruct.NewOptional(30.0),
 		},
 		{
-			Date:  util.GetMoexNow(mockClock).AddDate(0, 0, 20),
-			Value: datastuct.Optional[float64]{},
+			Date:  timeHelper.GetMoexNow().AddDate(0, 0, 20),
+			Value: datastruct.Optional[float64]{},
 		},
 	}
 
 	staticStore.EXPECT().GetBondization("2").Return(moex.Bondization{
-		Id:            "2",
+		ID:            "2",
 		Amortizations: expectedAmotrizations,
 		Coupons:       expectedCoupons,
 	}, nil)
 
 	result, err = calc.CalcStaticStatisticForOneBond(moex.Bond{
-		Id: "2",
+		ID: "2",
 		MarketDataPart: moex.MarketDataPart{
 			CurrentPricePercent: 10.0,
 		},
@@ -120,11 +119,14 @@ func TestStaticCalculatorErrors(t *testing.T) {
 	assert.Equal(0.0, result)
 }
 
-func prepareStaticCalculator(mockController *gomock.Controller) (service.IStaticCalculatorService, *mockservice.MockIStaticStoreService, *clock.Mock) {
+func prepareStaticCalculator(
+	mockController *gomock.Controller,
+) (*service.StaticCalculatorService, *mockservice.MockIStaticStoreService, *util.TimeHelper) {
 	staticStore := mockservice.NewMockIStaticStoreService(mockController)
 	mockClock := clock.NewMock()
+	timeHelper := util.NewTimeHelper(mockClock)
 
-	calc := service.NewStaticCalculatorService(staticStore, mockClock)
+	calc := service.NewStaticCalculatorService(staticStore, timeHelper)
 
-	return calc, staticStore, mockClock
+	return calc, staticStore, timeHelper
 }

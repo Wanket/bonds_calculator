@@ -1,8 +1,8 @@
-package moex
+package moex_test
 
 import (
 	"bonds_calculator/internal/model/calculator"
-	"bonds_calculator/internal/model/datastuct"
+	"bonds_calculator/internal/model/datastruct"
 	"bonds_calculator/internal/model/db"
 	asserts "github.com/stretchr/testify/assert"
 	"testing"
@@ -24,10 +24,10 @@ func TestCalcStatisticByDate(t *testing.T) {
 	startDate := income[1].Date
 	endDate := income[len(income)-2].Date
 
-	expectedResult := []datastuct.Pair[time.Time, float64]{
-		{time.Date(2018, time.January, 2, 0, 0, 0, 0, time.UTC), 55},
-		{time.Date(2018, time.January, 3, 0, 0, 0, 0, time.UTC), 99},
-		{time.Date(2018, time.January, 4, 0, 0, 0, 0, time.UTC), 44},
+	expectedResult := []datastruct.Pair[time.Time, float64]{
+		{Key: time.Date(2018, time.January, 2, 0, 0, 0, 0, time.UTC), Value: 55},
+		{Key: time.Date(2018, time.January, 3, 0, 0, 0, 0, time.UTC), Value: 99},
+		{Key: time.Date(2018, time.January, 4, 0, 0, 0, 0, time.UTC), Value: 44},
 	}
 
 	statisticCalculator := calculator.NewStatisticCalculator(income)

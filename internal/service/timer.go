@@ -15,13 +15,13 @@ type ITimerService interface {
 }
 
 type TimerService struct {
-	context context.Context
+	context context.Context //nolint:containedctx
 	cancel  context.CancelFunc
 
 	clock clock.Clock
 }
 
-func NewTimerService(clock clock.Clock) ITimerService {
+func NewTimerService(clock clock.Clock) *TimerService {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &TimerService{

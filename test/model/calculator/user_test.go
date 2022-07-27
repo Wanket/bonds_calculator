@@ -1,22 +1,19 @@
-package calculator
+package calculator_test
 
 import (
 	"bonds_calculator/internal/model/calculator"
 	"bonds_calculator/internal/model/db"
 	"bonds_calculator/internal/model/moex"
 	"bonds_calculator/test"
+	testcalculator "bonds_calculator/test/model/calculator"
+	testmoex "bonds_calculator/test/model/moex"
 	"testing"
-)
-
-var (
-	userBondization = loadUserBondization()
-	userBuyHistory  = loadUserBuyHistory()
 )
 
 func TestCalcUserPercent(t *testing.T) {
 	assert, _ := test.PrepareTest(t)
 
-	userCalculator := calculator.NewUserCalculator(userBondization, userBuyHistory)
+	userCalculator := calculator.NewUserCalculator(loadUserBondization(), loadUserBuyHistory())
 	percent, err := userCalculator.CalcUserPercent(calculator.Maturity)
 	assert.NoError(err, "CalcUserPercent calculation error")
 
@@ -29,8 +26,8 @@ func TestCalcUserPercent(t *testing.T) {
 func TestCalcUserPercentForOneBond(t *testing.T) {
 	assert, _ := test.PrepareTest(t)
 
-	userCalculator := calculator.NewUserCalculator(userBondization, userBuyHistory)
-	percent, err := userCalculator.CalcUserPercentForOneBond(parsedBondization.Id, calculator.Maturity)
+	userCalculator := calculator.NewUserCalculator(loadUserBondization(), loadUserBuyHistory())
+	percent, err := userCalculator.CalcUserPercentForOneBond(testmoex.LoadParsedBondization().ID, calculator.Maturity)
 
 	assert.NoError(err, "CalcUserPercentForOneBond calculation error")
 
@@ -41,7 +38,7 @@ func TestCalcUserPercentForOneBond(t *testing.T) {
 }
 
 func BenchmarkCalcUserPercent(b *testing.B) {
-	userCalculator := calculator.NewUserCalculator(userBondization, userBuyHistory)
+	userCalculator := calculator.NewUserCalculator(loadUserBondization(), loadUserBuyHistory())
 
 	for i := 0; i < b.N; i++ {
 		_, _ = userCalculator.CalcUserPercent(calculator.Maturity)
@@ -52,15 +49,15 @@ func BenchmarkCalcUserPercent(b *testing.B) {
 
 func loadUserBuyHistory() []db.BuyHistory {
 	return append(
-		multiplyBuyHistory,
-		buyHistoryVariable,
-		buyHistory,
+		testcalculator.LoadMultiplyBuyHistory(),
+		testcalculator.LoadBuyHistoryVariable(),
+		testcalculator.LoadBuyHistory(),
 	)
 }
 
 func loadUserBondization() []moex.Bondization {
 	return []moex.Bondization{
-		bondizationVariable,
-		parsedBondization,
+		testcalculator.LoadBondizationVariable(),
+		testmoex.LoadParsedBondization(),
 	}
 }

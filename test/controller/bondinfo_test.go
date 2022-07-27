@@ -1,13 +1,14 @@
-package controller
+package controller_test
 
 import (
 	"bonds_calculator/internal/controller"
-	"bonds_calculator/internal/model/datastuct"
+	"bonds_calculator/internal/model/datastruct"
 	"bonds_calculator/internal/model/moex"
 	"bonds_calculator/internal/service"
 	mockservice "bonds_calculator/internal/service/mock"
 	"bonds_calculator/test"
-	"errors"
+	testcontroller "bonds_calculator/test/controller"
+	testservice "bonds_calculator/test/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"io"
@@ -22,10 +23,10 @@ func TestBondInfoSuccess(t *testing.T) {
 
 	bondInfoService.EXPECT().GetBondInfo("test_id").Return(service.BondInfoResult{
 		Bond: moex.Bond{
-			Id: "test_id",
+			ID: "test_id",
 		},
 		Bondization: moex.Bondization{
-			Id: "test_id",
+			ID: "test_id",
 			Amortizations: []moex.Amortization{
 				{
 					Value: 1000.0,
@@ -33,7 +34,8 @@ func TestBondInfoSuccess(t *testing.T) {
 			},
 			Coupons: []moex.Coupon{},
 		},
-		MaturityIncome: datastuct.NewOptional(3.5),
+		MaturityIncome: datastruct.NewOptional(3.5),
+		CurrentIncome:  datastruct.Optional[float64]{},
 	}, nil)
 
 	req := httptest.NewRequest("GET", "/api/static/bond_info?id=test_id", nil)
@@ -44,7 +46,8 @@ func TestBondInfoSuccess(t *testing.T) {
 	assert.Equal(fiber.StatusOK, resp.StatusCode)
 	assert.Equal("application/json", resp.Header.Get("Content-Type"))
 
-	expected := `{"Bond":{"Id":"test_id","CurrentPricePercent":0,"ShortName":"","Coupon":0,"NextCoupon":"0001-01-01T00:00:00Z","AccCoupon":0,"PrevPricePercent":0,"Value":0,"CouponPeriod":0,"PriceStep":0,"CouponPercent":null,"EndDate":"0001-01-01T00:00:00Z","Currency":""},"Bondization":{"Id":"test_id","Amortizations":[{"Date":"0001-01-01T00:00:00Z","Value":1000}],"Coupons":[]},"MaturityIncome":3.5,"CurrentIncome":null}`
+	expected, err := testservice.LoadExpectedJSON[service.BondInfoResult]("test/data/marshaling/bond_info_success.json")
+	assert.NoError(err)
 	body, err := io.ReadAll(resp.Body)
 	assert.NoError(err)
 	assert.Equal(expected, string(body))
@@ -67,7 +70,7 @@ func TestBondInfoErrors(t *testing.T) {
 
 	app, bondInfoService := createAndRegisterNewBondInfoController(mockController)
 
-	bondInfoService.EXPECT().GetBondInfo("test_id").Return(service.BondInfoResult{}, errors.New("test error"))
+	bondInfoService.EXPECT().GetBondInfo("test_id").Return(service.BondInfoResult{}, test.ErrTest) //nolint:exhaustruct
 
 	req := httptest.NewRequest("GET", "/api/static/bond_info?id=test_id", nil)
 
@@ -80,12 +83,14 @@ func TestBondInfoErrors(t *testing.T) {
 	assert.Equal("test error", string(body))
 }
 
-func createAndRegisterNewBondInfoController(mockController *gomock.Controller) (*fiber.App, *mockservice.MockIBondInfoService) {
+func createAndRegisterNewBondInfoController(
+	mockController *gomock.Controller,
+) (*fiber.App, *mockservice.MockIBondInfoService) {
 	bondInfoService := mockservice.NewMockIBondInfoService(mockController)
 
 	ctr := controller.NewBondInfoController(bondInfoService)
 
-	app := createAppAndRegistryController("api/static", ctr)
+	app := testcontroller.CreateAppAndRegistryController("api/static", ctr)
 
 	return app, bondInfoService
 }

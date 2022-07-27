@@ -1,9 +1,10 @@
-package moex
+package moex_test
 
 import (
 	"bonds_calculator/internal/model/calculator"
-	"bonds_calculator/internal/model/datastuct"
+	"bonds_calculator/internal/model/datastruct"
 	"bonds_calculator/internal/model/db"
+	"bonds_calculator/internal/util"
 	gofuzz "github.com/google/gofuzz"
 	asserts "github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slices"
@@ -34,15 +35,15 @@ func FuzzCalcStatistic(f *testing.F) {
 		statisticCalculator := calculator.NewStatisticCalculator(income)
 		results := statisticCalculator.CalcStatistic()
 
-		slices.IsSortedFunc(results, func(left, right datastuct.Pair[time.Time, float64]) bool {
+		slices.IsSortedFunc(results, func(left, right datastruct.Pair[time.Time, float64]) bool {
 			return left.Key.Before(right.Key)
 		})
 
 		for _, result := range results {
 			assert.False(math.IsNaN(result.Value), "result is NaN")
 
-			assert.True(!income[0].Date.Truncate(time.Hour * 24).After(result.Key))
-			assert.True(!result.Key.After(income[len(income)-1].Date.Truncate(time.Hour * 24).Add(time.Hour * 24)))
+			assert.True(!income[0].Date.Truncate(util.Day).After(result.Key))
+			assert.True(!result.Key.After(income[len(income)-1].Date.Truncate(util.Day).Add(time.Hour * 24)))
 		}
 	})
 }

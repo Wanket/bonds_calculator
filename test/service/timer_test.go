@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"bonds_calculator/internal/service"
@@ -17,6 +17,7 @@ func TestTimer(t *testing.T) {
 	defer timer.Close()
 
 	doneChan := make(chan struct{})
+
 	timer.SubscribeEvery(time.Minute*5, func() {
 		doneChan <- struct{}{}
 	})
@@ -56,6 +57,7 @@ func TestTimerStartFrom(t *testing.T) {
 	defer timer.Close()
 
 	doneChan := make(chan struct{})
+
 	timer.SubscribeEveryStartFrom(time.Minute*5, mockClock.Now().Add(time.Minute), func() {
 		doneChan <- struct{}{}
 	})
@@ -76,22 +78,22 @@ func TestTimerStartFrom(t *testing.T) {
 	case <-time.After(time.Second):
 	}
 
-	for i := 1; i < 3; i++ {
+	for duration := 1; duration < 3; duration++ {
 		runtime.Gosched()
 
 		time.Sleep(time.Millisecond) // wait for timer to register event
 
-		mockClock.Add(durations[i])
+		mockClock.Add(durations[duration])
 
 		select {
 		case <-doneChan:
 		case <-time.After(time.Second):
-			assert.Fail("SubscribeEveryStartFrom timeout", fmt.Sprintf("duration id: %d", i))
+			assert.Fail("SubscribeEveryStartFrom timeout", fmt.Sprintf("duration id: %d", duration))
 		}
 	}
 }
 
-func prepareTimer() (service.ITimerService, *clock.Mock) {
+func prepareTimer() (*service.TimerService, *clock.Mock) {
 	mockClock := clock.NewMock()
 
 	timer := service.NewTimerService(mockClock)

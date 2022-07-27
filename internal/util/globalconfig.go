@@ -1,32 +1,9 @@
 package util
 
-import (
-	"sync"
-)
+type IGlobalConfig interface {
+	MoexClientQueueSize() int
 
-var config GlobalConfig
-var loadConfigOnce sync.Once
-
-type GlobalConfig struct {
-	moexClientQueueSize int
-
-	httpPort int
-}
-
-func GetGlobalConfig() *GlobalConfig {
-	loadConfigOnce.Do(func() {
-		config = loadGlobalConfig()
-	})
-
-	return &config
-}
-
-func (config *GlobalConfig) MoexClientQueueSize() int {
-	return config.moexClientQueueSize
-}
-
-func (config *GlobalConfig) HttpPort() int {
-	return config.httpPort
+	HTTPPort() int
 }
 
 const (
@@ -34,9 +11,24 @@ const (
 	httpPort            = "CONFIG_HTTP_PORT"
 )
 
-func loadGlobalConfig() GlobalConfig {
-	return GlobalConfig{
+type GlobalConfig struct {
+	moexClientQueueSize int
+
+	httpPort int
+}
+
+//nolint:gomnd
+func NewGlobalConfig() *GlobalConfig {
+	return &GlobalConfig{
 		moexClientQueueSize: GetIntEnv(moexClientQueueSize, 10),
 		httpPort:            GetIntEnv(httpPort, 8080),
 	}
+}
+
+func (config *GlobalConfig) MoexClientQueueSize() int {
+	return config.moexClientQueueSize
+}
+
+func (config *GlobalConfig) HTTPPort() int {
+	return config.httpPort
 }

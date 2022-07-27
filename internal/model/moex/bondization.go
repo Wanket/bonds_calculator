@@ -1,9 +1,9 @@
 package moex
 
 import (
-	"bonds_calculator/internal/model/datastuct"
-	"bonds_calculator/internal/util"
+	"bonds_calculator/internal/model/datastruct"
 	"bytes"
+	"errors"
 	"fmt"
 	"golang.org/x/exp/slices"
 	"io"
@@ -11,14 +11,9 @@ import (
 	"time"
 )
 
-// Structs for this response:
-// https://iss.moex.com/iss/securities/$bondid/bondization.csv?limit=unlimited&iss.meta=off&iss.only=amortizations,coupons&amortizations.columns=$1&coupons.columns=$2
-// $1 = amortdate,value
-// $2 = coupondate,value
-
 type (
 	Bondization struct {
-		Id            string
+		ID            string
 		Amortizations []Amortization
 		Coupons       []Coupon
 	}
@@ -30,21 +25,26 @@ type (
 
 	Coupon struct {
 		Date  time.Time
-		Value datastuct.Optional[float64]
+		Value datastruct.Optional[float64]
 	}
 )
 
+var (
+	errEmptyBondizationID   = errors.New("empty bondization id")
+	errLastAmortizationDate = errors.New("last amortization date must be equal to end date")
+)
+
 func (bondization *Bondization) IsValid(endDate time.Time) error {
-	if bondization.Id == "" {
-		return fmt.Errorf("bondization id is empty")
+	if bondization.ID == "" {
+		return errEmptyBondizationID
 	}
 
 	if err := CheckAmortizations(bondization.Amortizations); err != nil {
 		return err
 	}
 
-	if bondization.Amortizations[len(bondization.Amortizations)-1].Date != endDate {
-		return fmt.Errorf("last amortization date must be equal to end date")
+	if !endDate.IsZero() && bondization.Amortizations[len(bondization.Amortizations)-1].Date != endDate {
+		return errLastAmortizationDate
 	}
 
 	if err := CheckCoupons(bondization.Coupons); err != nil {
@@ -54,51 +54,66 @@ func (bondization *Bondization) IsValid(endDate time.Time) error {
 	return nil
 }
 
+var (
+	errEmptyAmortizations    = errors.New("amortizations is empty")
+	errAmortizationsUnsorted = errors.New("amortizations must be sorted")
+	errAmortizationsValue    = errors.New("amortizations value must be > 0")
+)
+
 func CheckAmortizations(amortizations []Amortization) error {
 	if len(amortizations) == 0 {
-		return fmt.Errorf("amortizations is empty")
+		return errEmptyAmortizations
 	}
 
 	if !slices.IsSortedFunc(amortizations, func(left, right Amortization) bool {
 		return left.Date.Before(right.Date)
 	}) {
-		return fmt.Errorf("amortizations must be sorted")
+		return errAmortizationsUnsorted
 	}
 
 	for _, amortization := range amortizations {
 		if amortization.Value < 0 {
-			return fmt.Errorf("amortizations value must be > 0")
+			return errAmortizationsValue
 		}
 	}
 
 	return nil
 }
 
+var (
+	errEmptyCoupons    = errors.New("coupons is empty")
+	errCouponsUnsorted = errors.New("coupons must be sorted")
+	errCouponsValue    = errors.New("coupons value must be > 0")
+	errCouponsNan      = errors.New("coupons value must be not NaN")
+)
+
 func CheckCoupons(coupons []Coupon) error {
 	if len(coupons) == 0 {
-		return fmt.Errorf("coupons is empty")
+		return errEmptyCoupons
 	}
 
 	if !slices.IsSortedFunc(coupons, func(left, right Coupon) bool {
 		return left.Date.Before(right.Date)
 	}) {
-		return fmt.Errorf("coupons must be sorted")
+		return errCouponsUnsorted
 	}
 
 	for _, coupon := range coupons {
 		if value, exist := coupon.Value.Get(); exist {
 			if value <= 0 {
-				return fmt.Errorf("coupons value must be > 0")
+				return errCouponsValue
 			}
 
 			if math.IsNaN(value) {
-				return fmt.Errorf("coupons value must be not NaN")
+				return errCouponsNan
 			}
 		}
 	}
 
 	return nil
 }
+
+var errAmortizationValueIsNull = errors.New("amortization value is null")
 
 func ParseBondization(id string, buf []byte) (Bondization, error) {
 	reader := NewReader(bytes.NewReader(buf))
@@ -108,20 +123,14 @@ func ParseBondization(id string, buf []byte) (Bondization, error) {
 	amortizations := make([]Amortization, 0)
 	coupons := make([]Coupon, 0)
 
-	for {
-		line, err := reader.Read()
-
-		if err == io.EOF {
-			break
-		}
-
+	for line, err := reader.Read(); !errors.Is(err, io.EOF); line, err = reader.Read() {
 		if err != nil {
-			return Bondization{}, err
+			return Bondization{}, fmt.Errorf("cannot read line: %w", err)
 		}
 
 		if len(line) == 1 {
 			if line[0] != "amortizations" && line[0] != "coupons" {
-				return Bondization{}, fmt.Errorf("invalid header %s", line[0])
+				return Bondization{}, fmt.Errorf("ParseBondization: %w: %s", errInvalidHeader, line[0])
 			}
 
 			header = line[0]
@@ -138,7 +147,7 @@ func ParseBondization(id string, buf []byte) (Bondization, error) {
 		if header == "amortizations" {
 			value, exist := item.Value.Get()
 			if !exist {
-				return Bondization{}, fmt.Errorf("amortizations value must be not null")
+				return Bondization{}, errAmortizationValueIsNull
 			}
 
 			amortizations = append(amortizations, Amortization{
@@ -159,7 +168,7 @@ func ParseBondization(id string, buf []byte) (Bondization, error) {
 	}
 
 	return Bondization{
-		Id:            id,
+		ID:            id,
 		Amortizations: amortizations,
 		Coupons:       coupons,
 	}, nil
@@ -167,19 +176,26 @@ func ParseBondization(id string, buf []byte) (Bondization, error) {
 
 type commonItem struct {
 	Date  time.Time
-	Value datastuct.Optional[float64]
+	Value datastruct.Optional[float64]
 }
 
+var errWrongAmortizationDataLineLength = errors.New("wrong amortization data line length")
+
 func tryParseItem(line []string) (commonItem, error) {
-	if len(line) != 2 {
-		return commonItem{}, fmt.Errorf("wrong Amortization data line len %d", len(line))
+	const commonItemLineSize = 2
+
+	if len(line) != commonItemLineSize {
+		return commonItem{}, fmt.Errorf("tryParseItem: %w %d", errWrongAmortizationDataLineLength, len(line))
 	}
 
 	date, err := time.Parse("2006-01-02", line[0])
-	value, err := util.ParseOptionalFloat64(line[1])
-
 	if err != nil {
-		return commonItem{}, fmt.Errorf("cannot parse Bondization item %v", err)
+		return commonItem{}, fmt.Errorf("cannot parse Bondization item %w", err)
+	}
+
+	value, err := datastruct.ParseOptionalFloat64(line[1])
+	if err != nil {
+		return commonItem{}, fmt.Errorf("cannot parse Bondization item %w", err)
 	}
 
 	return commonItem{

@@ -1,4 +1,4 @@
-package calculator
+package calculator_test
 
 import (
 	"bonds_calculator/internal/model/calculator"
@@ -39,13 +39,19 @@ func FuzzCalcPercentForOneBuyHistory(f *testing.F) {
 			t.Skip("Bondization is invalid")
 		}
 
-		if test.CheckBuyHistoryValid([]db.BuyHistory{fuzzCalculatorTestData.BuyHistory}, fuzzCalculatorTestData.EndDate) != nil {
+		if test.CheckBuyHistoryValid(
+			[]db.BuyHistory{fuzzCalculatorTestData.BuyHistory},
+			fuzzCalculatorTestData.EndDate,
+		) != nil {
 			t.Skip("BuyHistory is invalid")
 		}
 
 		incomeCalculator := calculator.NewIncomeCalculator(&fuzzCalculatorTestData.Bondization)
 
-		result, err := incomeCalculator.CalcPercentForOneBuyHistory(fuzzCalculatorTestData.BuyHistory, fuzzCalculatorTestData.Setting)
+		result, err := incomeCalculator.CalcPercentForOneBuyHistory(
+			fuzzCalculatorTestData.BuyHistory,
+			fuzzCalculatorTestData.Setting,
+		)
 
 		assert.False(err != nil && result != 0, "got error with result != 0")
 

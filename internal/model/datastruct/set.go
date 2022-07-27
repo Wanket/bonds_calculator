@@ -1,4 +1,4 @@
-package datastuct
+package datastruct
 
 type Set[T comparable] struct {
 	items map[T]struct{}

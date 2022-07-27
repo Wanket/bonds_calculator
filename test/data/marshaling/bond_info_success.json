@@ -1,0 +1,29 @@
+{
+  "Bond": {
+    "ID": "test_id",
+    "CurrentPricePercent": 0,
+    "ShortName": "",
+    "Coupon": 0,
+    "NextCoupon": "0001-01-01T00:00:00Z",
+    "AccCoupon": 0,
+    "PrevPricePercent": 0,
+    "Value": 0,
+    "CouponPeriod": 0,
+    "PriceStep": 0,
+    "CouponPercent": null,
+    "EndDate": "0001-01-01T00:00:00Z",
+    "Currency": ""
+  },
+  "Bondization": {
+    "ID": "test_id",
+    "Amortizations": [
+      {
+        "Date": "0001-01-01T00:00:00Z",
+        "Value": 1000
+      }
+    ],
+    "Coupons": []
+  },
+  "MaturityIncome": 3.5,
+  "CurrentIncome": null
+}

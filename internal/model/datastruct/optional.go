@@ -1,4 +1,4 @@
-package datastuct
+package datastruct
 
 import (
 	"bonds_calculator/internal/util/marshaling"
@@ -19,7 +19,7 @@ func NewOptional[T any](val T) Optional[T] {
 	}
 }
 
-func (optional *Optional[T]) Get() (T, bool) {
+func (optional *Optional[T]) Get() (T, bool) { //nolint:ireturn
 	return optional.val, optional.exist
 }
 
@@ -60,6 +60,8 @@ func (optional *Optional[T]) UnmarshalEasyJSON(lexer *jlexer.Lexer) {
 	if unmarshaler, is := any(optional.val).(easyjson.Unmarshaler); is {
 		unmarshaler.UnmarshalEasyJSON(lexer)
 	} else {
-		marshaling.UnmarshalBaseType(lexer, optional.val)
+		marshaling.UnmarshalBaseType(lexer, &optional.val)
 	}
+
+	optional.exist = true
 }

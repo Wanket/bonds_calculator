@@ -1,13 +1,19 @@
-package calculator
+package calculator_test
 
 import (
 	"bonds_calculator/internal/model/calculator"
 	"bonds_calculator/internal/model/moex"
 	"bonds_calculator/test"
+	testcalculator "bonds_calculator/test/model/calculator"
+	testmoex "bonds_calculator/test/model/moex"
+	"github.com/peteole/testdata-loader"
 	"testing"
 )
 
 func TestCalcMaturityOnePercent(t *testing.T) {
+	parsedBondization := testmoex.LoadParsedBondization()
+	buyHistory := testcalculator.LoadBuyHistory()
+
 	assert, _ := test.PrepareTest(t)
 
 	incomeCalculator := calculator.NewIncomeCalculator(&parsedBondization)
@@ -21,6 +27,9 @@ func TestCalcMaturityOnePercent(t *testing.T) {
 }
 
 func TestCalcCurrentOnePercent(t *testing.T) {
+	parsedBondization := testmoex.LoadParsedBondization()
+	buyHistory := testcalculator.LoadBuyHistory()
+
 	assert, _ := test.PrepareTest(t)
 
 	incomeCalculator := calculator.NewIncomeCalculator(&parsedBondization)
@@ -34,6 +43,9 @@ func TestCalcCurrentOnePercent(t *testing.T) {
 }
 
 func TestCalcMultiBuyPercent(t *testing.T) {
+	parsedBondization := testmoex.LoadParsedBondization()
+	multiplyBuyHistory := testcalculator.LoadMultiplyBuyHistory()
+
 	assert, _ := test.PrepareTest(t)
 
 	incomeCalculator := calculator.NewIncomeCalculator(&parsedBondization)
@@ -49,8 +61,16 @@ func TestCalcMultiBuyPercent(t *testing.T) {
 func TestCalcVariablePercent(t *testing.T) {
 	assert, _ := test.PrepareTest(t)
 
-	bonds, _ := moex.ParseBondsCp1251(bondsVariableData)
-	bondizations, _ := moex.ParseBondization(bonds[0].Id, bondizationVariableData)
+	buyHistoryVariable := testcalculator.LoadBuyHistoryVariable()
+
+	bonds, err := moex.ParseBondsCp1251(testdataloader.GetTestFile("test/data/moex/bond_variable.csv"))
+	assert.NoError(err)
+
+	bondizations, err := moex.ParseBondization(
+		bonds[0].ID,
+		testdataloader.GetTestFile("test/data/moex/bondization_variable.csv"),
+	)
+	assert.NoError(err)
 
 	incomeCalculator := calculator.NewIncomeCalculator(&bondizations)
 	percent, err := incomeCalculator.CalcPercentForOneBuyHistory(buyHistoryVariable, calculator.Maturity)
@@ -63,6 +83,9 @@ func TestCalcVariablePercent(t *testing.T) {
 }
 
 func BenchmarkCalcPercent(b *testing.B) {
+	parsedBondization := testmoex.LoadParsedBondization()
+	buyHistory := testcalculator.LoadBuyHistory()
+
 	for i := 0; i < b.N; i++ {
 		incomeCalculator := calculator.NewIncomeCalculator(&parsedBondization)
 		_, _ = incomeCalculator.CalcPercentForOneBuyHistory(buyHistory, calculator.Maturity)

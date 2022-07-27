@@ -1,12 +1,14 @@
-package controller
+package controller_test
 
 import (
 	"bonds_calculator/internal/controller"
-	"bonds_calculator/internal/model/datastuct"
+	"bonds_calculator/internal/model/datastruct"
 	"bonds_calculator/internal/model/moex"
 	"bonds_calculator/internal/service"
 	mockservice "bonds_calculator/internal/service/mock"
 	"bonds_calculator/test"
+	testcontroller "bonds_calculator/test/controller"
+	testservice "bonds_calculator/test/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"io"
@@ -22,9 +24,10 @@ func TestSearchSuccess(t *testing.T) {
 	searchService.EXPECT().Search("test_q").Return(service.SearchResults{
 		service.SearchResult{
 			Bond: moex.Bond{
-				Id: "test",
+				ID: "test",
 			},
-			MaturityIncome: datastuct.NewOptional(3.5),
+			MaturityIncome: datastruct.NewOptional(3.5),
+			CurrentIncome:  datastruct.Optional[float64]{},
 		},
 	})
 
@@ -36,7 +39,8 @@ func TestSearchSuccess(t *testing.T) {
 	assert.Equal(fiber.StatusOK, resp.StatusCode)
 	assert.Equal("application/json", resp.Header.Get("Content-Type"))
 
-	expected := `[{"Bond":{"Id":"test","CurrentPricePercent":0,"ShortName":"","Coupon":0,"NextCoupon":"0001-01-01T00:00:00Z","AccCoupon":0,"PrevPricePercent":0,"Value":0,"CouponPeriod":0,"PriceStep":0,"CouponPercent":null,"EndDate":"0001-01-01T00:00:00Z","Currency":""},"MaturityIncome":3.5,"CurrentIncome":null}]`
+	expected, err := testservice.LoadExpectedJSON[service.SearchResults]("test/data/marshaling/search_success.json")
+	assert.NoError(err)
 	body, err := io.ReadAll(resp.Body)
 	assert.NoError(err)
 	assert.Equal(expected, string(body))
@@ -63,12 +67,14 @@ func TestSearchBadRequest(t *testing.T) {
 	}
 }
 
-func createAndRegisterNewSearchController(mockController *gomock.Controller) (*fiber.App, *mockservice.MockISearchService) {
+func createAndRegisterNewSearchController(
+	mockController *gomock.Controller,
+) (*fiber.App, *mockservice.MockISearchService) {
 	searchService := mockservice.NewMockISearchService(mockController)
 
 	ctr := controller.NewSearchController(searchService)
 
-	app := createAppAndRegistryController("api/static", ctr)
+	app := testcontroller.CreateAppAndRegistryController("api/static", ctr)
 
 	return app, searchService
 }

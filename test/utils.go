@@ -2,7 +2,7 @@ package test
 
 import (
 	"bonds_calculator/internal/model/db"
-	"fmt"
+	"errors"
 	"github.com/golang/mock/gomock"
 	log "github.com/sirupsen/logrus"
 	asserts "github.com/stretchr/testify/assert"
@@ -13,7 +13,11 @@ import (
 	"time"
 )
 
+var ErrTest = errors.New("test error")
+
 func PrepareTest(t *testing.T) (*asserts.Assertions, *gomock.Controller) {
+	t.Helper()
+
 	log.SetOutput(ioutil.Discard)
 
 	t.Parallel()
@@ -41,46 +45,56 @@ func CheckFailed[T any](assert *asserts.Assertions, t T, err error) {
 	}
 }
 
-func isZero[T any](t any) bool {
-	if t == nil {
+func isZero[T any](obj any) bool {
+	if obj == nil {
 		return true
 	}
 
-	switch reflect.TypeOf(t).Kind() {
+	switch reflect.TypeOf(obj).Kind() {
 	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Chan, reflect.Slice:
-		return reflect.ValueOf(t).IsNil()
-	}
+		return reflect.ValueOf(obj).IsNil()
+	default:
+		var zero T
 
-	var zero T
-	return reflect.DeepEqual(t, zero)
+		return reflect.DeepEqual(obj, zero)
+	}
 }
+
+var (
+	errHistoryUnsorted                   = errors.New("buy history is unsorted")
+	errHistoryDateAfterEndDate           = errors.New("buy history date after end date")
+	errHistoryCountZero                  = errors.New("buy history count is zero")
+	errHistoryAccCouponNegative          = errors.New("buy history acc coupon is negative")
+	errHistoryBondIDEmpty                = errors.New("buy history bond id is empty")
+	errHistoryNominalValueZeroOrNegative = errors.New("buy history nominal value is zero or negative")
+)
 
 func CheckBuyHistoryValid(history []db.BuyHistory, endDate time.Time) error {
 	if !slices.IsSortedFunc(history, func(left, right db.BuyHistory) bool {
 		return left.Date.Before(right.Date)
 	}) {
-		return fmt.Errorf("buy history must be sorted")
+		return errHistoryUnsorted
 	}
 
 	for _, hst := range history {
 		if !hst.Date.Before(endDate) {
-			return fmt.Errorf("history date is equal or after end date")
+			return errHistoryDateAfterEndDate
 		}
 
 		if hst.Count == 0 {
-			return fmt.Errorf("history count is zero")
+			return errHistoryCountZero
 		}
 
 		if hst.AccCoupon < 0 {
-			return fmt.Errorf("history acc coupon is negative")
+			return errHistoryAccCouponNegative
 		}
 
-		if hst.BondId == "" {
-			return fmt.Errorf("history bond id is empty")
+		if hst.BondID == "" {
+			return errHistoryBondIDEmpty
 		}
 
 		if hst.NominalValue <= 0 {
-			return fmt.Errorf("history nominal value is zero or negative")
+			return errHistoryNominalValueZeroOrNegative
 		}
 	}
 

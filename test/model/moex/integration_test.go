@@ -1,4 +1,4 @@
-package moex
+package moex_test
 
 import (
 	"bonds_calculator/internal/api"
@@ -28,10 +28,11 @@ func TestLoadAllBondizations(t *testing.T) {
 	client := api.NewMoexClient(25)
 	defer client.Close()
 
-	bonds, _ := client.GetBonds()
+	bonds, err := client.GetBonds()
+	assert.NoError(err)
 
-	wg := sync.WaitGroup{}
-	wg.Add(len(bonds))
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(len(bonds))
 
 	for _, bond := range bonds {
 		go func(id string, endDate time.Time) {
@@ -40,9 +41,9 @@ func TestLoadAllBondizations(t *testing.T) {
 
 			assert.NoError(bondization.IsValid(endDate), "checking bondization")
 
-			wg.Done()
-		}(bond.Id, bond.EndDate)
+			waitGroup.Done()
+		}(bond.ID, bond.EndDate)
 	}
 
-	wg.Wait()
+	waitGroup.Wait()
 }

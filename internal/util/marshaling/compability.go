@@ -1,3 +1,4 @@
+//nolint:wrapcheck
 package marshaling
 
 import "github.com/mailru/easyjson"

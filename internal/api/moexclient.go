@@ -9,10 +9,11 @@ import (
 	"strings"
 )
 
+//nolint:lll
 const (
-	allBondsUrl = "https://iss.moex.com/iss/engines/stock/markets/bonds/securities.csv?iss.meta=off&iss.only=marketdata,securities&securities.columns=SECID,SHORTNAME,COUPONVALUE,NEXTCOUPON,ACCRUEDINT,PREVPRICE,FACEVALUE,COUPONPERIOD,MINSTEP,COUPONPERCENT,MATDATE,FACEUNIT&marketdata.columns=SECID,LCURRENTPRICE"
+	allBondsURL = "https://iss.moex.com/iss/engines/stock/markets/bonds/securities.csv?iss.meta=off&iss.only=marketdata,securities&securities.columns=SECID,SHORTNAME,COUPONVALUE,NEXTCOUPON,ACCRUEDINT,PREVPRICE,FACEVALUE,COUPONPERIOD,MINSTEP,COUPONPERCENT,MATDATE,FACEUNIT&marketdata.columns=SECID,LCURRENTPRICE"
 
-	allBondizationUrl = "https://iss.moex.com/iss/securities/${bond}/bondization.csv?limit=unlimited&iss.meta=off&iss.only=amortizations,coupons&amortizations.columns=amortdate,value&coupons.columns=coupondate,value"
+	allBondizationURL = "https://iss.moex.com/iss/securities/${bond}/bondization.csv?limit=unlimited&iss.meta=off&iss.only=amortizations,coupons&amortizations.columns=amortdate,value&coupons.columns=coupondate,value"
 )
 
 //go:generate go run github.com/golang/mock/mockgen -destination=mock/moexclient_gen.go . IMoexClient
@@ -20,7 +21,7 @@ type IMoexClient interface {
 	Close() error
 
 	GetBonds() ([]moex.Bond, error)
-	GetBondization(Id string) (moex.Bondization, error)
+	GetBondization(ID string) (moex.Bondization, error)
 }
 
 type MoexClient struct {
@@ -28,20 +29,21 @@ type MoexClient struct {
 
 	workQueue chan worker
 
-	context context.Context
+	context context.Context //nolint:containedctx
 	cancel  context.CancelFunc
 }
 
-func NewMoexClient(queueSize int) IMoexClient {
-	return NewMoexClientWithContext(queueSize, context.Background())
+func NewMoexClient(queueSize int) *MoexClient {
+	return NewMoexClientWithContext(context.Background(), queueSize)
 }
 
-func NewMoexClientWithContext(queueSize int, ctx context.Context) IMoexClient {
+func NewMoexClientWithContext(ctx context.Context, queueSize int) *MoexClient {
 	ctx, cancel := context.WithCancel(ctx)
 	client := MoexClient{
-		workQueue: make(chan worker, queueSize),
-		context:   ctx,
-		cancel:    cancel,
+		innerClient: http.Client{},
+		workQueue:   make(chan worker, queueSize),
+		context:     ctx,
+		cancel:      cancel,
 	}
 
 	for i := 0; i < queueSize; i++ {
@@ -63,9 +65,9 @@ func (client *MoexClient) GetBonds() ([]moex.Bond, error) {
 	return request.commonReturn(client, &request)
 }
 
-func (client *MoexClient) GetBondization(Id string) (moex.Bondization, error) {
+func (client *MoexClient) GetBondization(id string) (moex.Bondization, error) {
 	request := bondizationRequest{
-		bondId:        Id,
+		bondID:        id,
 		commonRequest: newCommonRequest[moex.Bondization](),
 	}
 
@@ -99,7 +101,7 @@ func newCommonRequest[T any]() commonRequest[T] {
 	}
 }
 
-func (request *commonRequest[R]) commonReturn(client *MoexClient, worker worker) (R, error) {
+func (request *commonRequest[R]) commonReturn(client *MoexClient, worker worker) (R, error) { //nolint:ireturn
 	client.workQueue <- worker
 
 	<-request.doneChan
@@ -114,7 +116,7 @@ type bondsRequest struct {
 func (bondsRequest *bondsRequest) work(client MoexClient) {
 	defer close(bondsRequest.doneChan)
 
-	resp, err := client.innerClient.Get(allBondsUrl)
+	resp, err := client.innerClient.Get(allBondsURL)
 
 	if resp != nil {
 		defer resp.Body.Close()
@@ -128,7 +130,7 @@ func (bondsRequest *bondsRequest) work(client MoexClient) {
 
 	buf, err := io.ReadAll(resp.Body)
 	if err != nil {
-		bondsRequest.err = fmt.Errorf("cannot read body %v", err)
+		bondsRequest.err = fmt.Errorf("cannot read body %w", err)
 
 		return
 	}
@@ -144,14 +146,14 @@ func (bondsRequest *bondsRequest) work(client MoexClient) {
 }
 
 type bondizationRequest struct {
-	bondId string
+	bondID string
 	commonRequest[moex.Bondization]
 }
 
 func (bondizationRequest *bondizationRequest) work(client MoexClient) {
 	defer close(bondizationRequest.doneChan)
 
-	resp, err := client.innerClient.Get(strings.Replace(allBondizationUrl, "${bond}", bondizationRequest.bondId, 1))
+	resp, err := client.innerClient.Get(strings.Replace(allBondizationURL, "${bond}", bondizationRequest.bondID, 1))
 
 	if resp != nil {
 		defer resp.Body.Close()
@@ -165,12 +167,12 @@ func (bondizationRequest *bondizationRequest) work(client MoexClient) {
 
 	buf, err := io.ReadAll(resp.Body)
 	if err != nil {
-		bondizationRequest.err = fmt.Errorf("cannot read body %v", err)
+		bondizationRequest.err = fmt.Errorf("cannot read body %w", err)
 
 		return
 	}
 
-	bondization, err := moex.ParseBondization(bondizationRequest.bondId, buf)
+	bondization, err := moex.ParseBondization(bondizationRequest.bondID, buf)
 	if err != nil {
 		bondizationRequest.err = err
 

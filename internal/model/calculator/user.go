@@ -3,6 +3,7 @@ package calculator
 import (
 	"bonds_calculator/internal/model/db"
 	"bonds_calculator/internal/model/moex"
+	"errors"
 	"fmt"
 )
 
@@ -14,12 +15,12 @@ type UserCalculator struct {
 func NewUserCalculator(bonds []moex.Bondization, buyHistory []db.BuyHistory) UserCalculator {
 	bondsMap := make(map[string]moex.Bondization)
 	for _, bond := range bonds {
-		bondsMap[bond.Id] = bond
+		bondsMap[bond.ID] = bond
 	}
 
 	buyHistoryMap := make(map[string][]db.BuyHistory)
 	for _, history := range buyHistory {
-		buyHistoryMap[history.BondId] = append(buyHistoryMap[history.BondId], history)
+		buyHistoryMap[history.BondID] = append(buyHistoryMap[history.BondID], history)
 	}
 
 	return UserCalculator{
@@ -28,15 +29,20 @@ func NewUserCalculator(bonds []moex.Bondization, buyHistory []db.BuyHistory) Use
 	}
 }
 
+var errBuyHistoriesByIDNotFound = errors.New("buy histories by bond id not found")
+
 func (calculator *UserCalculator) CalcUserPercent(setting IncomeSetting) (float64, error) {
 	var buyCount uint
-	var sumPercent float64
-	for _, bond := range calculator.bonds {
-		bondCalculator := NewIncomeCalculator(&bond)
 
-		histories, exist := calculator.buyHistory[bond.Id]
+	var sumPercent float64
+
+	for _, bond := range calculator.bonds {
+		// bondCalculator lifetime is equal to bond lifetime
+		bondCalculator := NewIncomeCalculator(&bond) //nolint:gosec
+
+		histories, exist := calculator.buyHistory[bond.ID]
 		if !exist {
-			return 0, fmt.Errorf("buy histories for bond with id %s not found", bond.Id)
+			return 0, fmt.Errorf("CalcUserPercent: %w, id: %s", errBuyHistoriesByIDNotFound, bond.ID)
 		}
 
 		for _, history := range histories {
@@ -54,21 +60,26 @@ func (calculator *UserCalculator) CalcUserPercent(setting IncomeSetting) (float6
 	return sumPercent / float64(buyCount), nil
 }
 
-func (calculator *UserCalculator) CalcUserPercentForOneBond(bondId string, setting IncomeSetting) (float64, error) {
-	bond, exist := calculator.bonds[bondId]
+var errBondByIDNotFound = errors.New("bond by id not found")
+
+func (calculator *UserCalculator) CalcUserPercentForOneBond(bondID string, setting IncomeSetting) (float64, error) {
+	bond, exist := calculator.bonds[bondID]
 	if !exist {
-		return 0, fmt.Errorf("bond with id %s not found", bondId)
+		return 0, fmt.Errorf("CalcUserPercentForOneBond: %w, id: %s", errBondByIDNotFound, bondID)
 	}
 
-	histories, exist := calculator.buyHistory[bondId]
+	histories, exist := calculator.buyHistory[bondID]
 	if !exist {
-		return 0, fmt.Errorf("buy histories for bond with id %s not found", bondId)
+		return 0, fmt.Errorf("CalcUserPercentForOneBond: %w, id: %s", errBuyHistoriesByIDNotFound, bondID)
 	}
 
 	incomeCalculator := NewIncomeCalculator(&bond)
 
-	var buyCount uint
-	var sumPercent float64
+	var (
+		buyCount   uint
+		sumPercent float64
+	)
+
 	for _, history := range histories {
 		oneHistoryPercent, err := incomeCalculator.CalcPercentForOneBuyHistory(history, setting)
 		if err != nil {

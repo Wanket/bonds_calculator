@@ -1,0 +1,25 @@
+linters:
+  enable-all: true
+  disable:
+    - gci
+    - gofumpt
+    - goimports
+    - exhaustivestruct
+    - scopelint
+linters-settings:
+  gomnd:
+    ignored-functions:
+      - strconv.ParseInt
+      - strconv.ParseUint
+      - strconv.ParseFloat
+  paralleltest:
+    ignore-missing: true
+  exhaustruct:
+    exclude:
+      - "bonds_calculator/internal/model/moex.*"
+      - "net/http.*"
+      - "github.com/gofiber/fiber/v2.*"
+  wrapcheck:
+    ignorePackageGlobs:
+      - "github.com/gofiber/fiber/*"
+  

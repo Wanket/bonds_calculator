@@ -1,4 +1,4 @@
-package model
+package model_test
 
 import (
 	"bonds_calculator/internal/model"
@@ -13,25 +13,25 @@ func TestBondSearcher(t *testing.T) {
 
 	bonds := []moex.Bond{
 		{
-			Id: "FBND",
+			ID: "FBND",
 			SecurityPart: moex.SecurityPart{
 				ShortName: "First Bond",
 			},
 		},
 		{
-			Id: "SBND",
+			ID: "SBND",
 			SecurityPart: moex.SecurityPart{
 				ShortName: "Second Bond",
 			},
 		},
 		{
-			Id: "NBND",
+			ID: "NBND",
 			SecurityPart: moex.SecurityPart{
 				ShortName: "Not B_ond",
 			},
 		},
 		{
-			Id: "NBN",
+			ID: "NBN",
 			SecurityPart: moex.SecurityPart{
 				ShortName: "Not B_ond",
 			},
@@ -41,18 +41,18 @@ func TestBondSearcher(t *testing.T) {
 	bondsSearcher := model.NewBondSearcher(bonds)
 
 	result := bondsSearcher.Search("bonD")
-	assert.Equal(sortedBondsById(bonds[0:2]), sortedBondsById(result))
+	assert.Equal(sortedBondsByID(bonds[0:2]), sortedBondsByID(result))
 
 	result = bondsSearcher.Search("BND")
-	assert.Equal(sortedBondsById(bonds[0:3]), sortedBondsById(result))
+	assert.Equal(sortedBondsByID(bonds[0:3]), sortedBondsByID(result))
 }
 
-func sortedBondsById(bonds []moex.Bond) []moex.Bond {
+func sortedBondsByID(bonds []moex.Bond) []moex.Bond {
 	copyBonds := make([]moex.Bond, len(bonds))
 	copy(copyBonds, bonds)
 
 	slices.SortFunc(copyBonds, func(left, right moex.Bond) bool {
-		return left.Id < right.Id
+		return left.ID < right.ID
 	})
 
 	return copyBonds
