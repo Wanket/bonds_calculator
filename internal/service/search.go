@@ -1,4 +1,4 @@
-//go:generate go run github.com/mailru/easyjson/easyjson $GOFILE
+//go:generate go run github.com/mailru/easyjson/easyjson -no_std_marshalers -lower_camel_case $GOFILE
 package service
 
 import (

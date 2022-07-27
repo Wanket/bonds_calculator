@@ -1,29 +1,29 @@
 {
-  "Bond": {
-    "ID": "test_id",
-    "CurrentPricePercent": 0,
-    "ShortName": "",
-    "Coupon": 0,
-    "NextCoupon": "0001-01-01T00:00:00Z",
-    "AccCoupon": 0,
-    "PrevPricePercent": 0,
-    "Value": 0,
-    "CouponPeriod": 0,
-    "PriceStep": 0,
-    "CouponPercent": null,
-    "EndDate": "0001-01-01T00:00:00Z",
-    "Currency": ""
+  "bond": {
+    "id": "test_id",
+    "currentPricePercent": 0,
+    "shortName": "",
+    "coupon": 0,
+    "nextCoupon": "0001-01-01T00:00:00Z",
+    "accCoupon": 0,
+    "prevPricePercent": 0,
+    "value": 0,
+    "couponPeriod": 0,
+    "priceStep": 0,
+    "couponPercent": null,
+    "endDate": "0001-01-01T00:00:00Z",
+    "currency": ""
   },
-  "Bondization": {
-    "ID": "test_id",
-    "Amortizations": [
+  "bondization": {
+    "id": "test_id",
+    "amortizations": [
       {
-        "Date": "0001-01-01T00:00:00Z",
-        "Value": 1000
+        "date": "0001-01-01T00:00:00Z",
+        "value": 1000
       }
     ],
-    "Coupons": []
+    "coupons": []
   },
-  "MaturityIncome": 3.5,
-  "CurrentIncome": null
+  "maturityIncome": 3.5,
+  "currentIncome": null
 }
