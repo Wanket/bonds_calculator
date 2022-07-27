@@ -15,10 +15,10 @@ func TestBondNullFields(t *testing.T) {
 	defer client.Close()
 
 	bonds, err := client.GetBonds()
-	assert.NoError(err, "getting bonds")
+	assert.NoError(err)
 
 	for _, bond := range bonds {
-		assert.NoError(bond.IsValid(), "checking bond")
+		assert.NoError(bond.IsValid())
 	}
 }
 
@@ -37,9 +37,9 @@ func TestLoadAllBondizations(t *testing.T) {
 	for _, bond := range bonds {
 		go func(id string, endDate time.Time) {
 			bondization, err := client.GetBondization(id)
-			assert.NoError(err, "getting bondization")
+			assert.NoError(err)
 
-			assert.NoError(bondization.IsValid(endDate), "checking bondization")
+			assert.NoError(bondization.IsValid(endDate))
 
 			waitGroup.Done()
 		}(bond.ID, bond.EndDate)

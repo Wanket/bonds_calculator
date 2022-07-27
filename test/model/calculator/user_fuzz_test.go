@@ -55,7 +55,7 @@ func FuzzCalcUserPercentForOneBond(f *testing.F) {
 
 		assert.False(err != nil && result != 0, "got error with result != 0")
 
-		assert.False(math.IsNaN(result), "result is NaN")
+		assert.False(math.IsNaN(result))
 		assert.GreaterOrEqual(result, 0.0)
 	})
 }
@@ -84,7 +84,7 @@ func FuzzCalcUserPercent(f *testing.F) {
 
 		assert.False(err != nil && result != 0, "got error with result != 0")
 
-		assert.False(math.IsNaN(result), "result is NaN")
+		assert.False(math.IsNaN(result))
 		assert.GreaterOrEqual(result, 0.0)
 	})
 }

@@ -13,7 +13,7 @@ func TestDeserializeBond(t *testing.T) {
 	assert, _ := test.PrepareTest(t)
 
 	bonds, err := moex.ParseBondsCp1251(testdataloader.GetTestFile("test/data/moex/bond.csv"))
-	assert.NoError(err, "unmarshalling bonds")
+	assert.NoError(err)
 
 	assert.Equal(loadParsedBonds(), bonds)
 }

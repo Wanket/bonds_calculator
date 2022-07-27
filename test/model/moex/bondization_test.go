@@ -15,7 +15,7 @@ func TestDeserializeBondization(t *testing.T) {
 	assert, _ := test.PrepareTest(t)
 
 	bondization, err := moex.ParseBondization(parsedBondization.ID, bondizationData)
-	assert.NoError(err, "unmarshalling bondization")
+	assert.NoError(err)
 
 	assert.Equal(parsedBondization, bondization)
 }

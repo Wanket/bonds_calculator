@@ -18,12 +18,12 @@ func TestCalcMaturityOnePercent(t *testing.T) {
 
 	incomeCalculator := calculator.NewIncomeCalculator(&parsedBondization)
 	percent, err := incomeCalculator.CalcPercentForOneBuyHistory(buyHistory, calculator.Maturity)
-	assert.NoError(err, "CalcPercentForOneBuyHistory (Maturity) calculation error")
+	assert.NoError(err)
 
 	accuracy := 0.01
 	expected := 0.124
 
-	assert.InDelta(expected, percent, accuracy, "CalcPercentForOneBuyHistory (Maturity) calculation error")
+	assert.InDelta(expected, percent, accuracy)
 }
 
 func TestCalcCurrentOnePercent(t *testing.T) {
@@ -34,12 +34,12 @@ func TestCalcCurrentOnePercent(t *testing.T) {
 
 	incomeCalculator := calculator.NewIncomeCalculator(&parsedBondization)
 	percent, err := incomeCalculator.CalcPercentForOneBuyHistory(buyHistory, calculator.Current)
-	assert.NoError(err, "CalcPercentForOneBuyHistory (Current) calculation error")
+	assert.NoError(err)
 
 	accuracy := 0.01
 	expected := 0.1515
 
-	assert.InDelta(expected, percent, accuracy, "CalcPercentForOneBuyHistory (Current) calculation error")
+	assert.InDelta(expected, percent, accuracy)
 }
 
 func TestCalcMultiBuyPercent(t *testing.T) {
@@ -50,12 +50,12 @@ func TestCalcMultiBuyPercent(t *testing.T) {
 
 	incomeCalculator := calculator.NewIncomeCalculator(&parsedBondization)
 	percent, err := incomeCalculator.CalcPercent(multiplyBuyHistory, calculator.Maturity)
-	assert.NoError(err, "CalcPercent (MultiBuyHistory) calculation error")
+	assert.NoError(err)
 
 	accuracy := 0.01
 	expected := 0.14214
 
-	assert.InDelta(expected, percent, accuracy, "CalcPercent (MultiBuyHistory) calculation error")
+	assert.InDelta(expected, percent, accuracy)
 }
 
 func TestCalcVariablePercent(t *testing.T) {
@@ -74,12 +74,12 @@ func TestCalcVariablePercent(t *testing.T) {
 
 	incomeCalculator := calculator.NewIncomeCalculator(&bondizations)
 	percent, err := incomeCalculator.CalcPercentForOneBuyHistory(buyHistoryVariable, calculator.Maturity)
-	assert.NoError(err, "CalcPercentForOneBuyHistory (Variable) calculation error")
+	assert.NoError(err)
 
 	accuracy := 0.01
 	expected := 0.065
 
-	assert.InDelta(expected, percent, accuracy, "CalcPercentForOneBuyHistory (Variable) calculation error")
+	assert.InDelta(expected, percent, accuracy)
 }
 
 func BenchmarkCalcPercent(b *testing.B) {

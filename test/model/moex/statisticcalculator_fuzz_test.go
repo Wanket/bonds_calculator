@@ -40,7 +40,7 @@ func FuzzCalcStatistic(f *testing.F) {
 		})
 
 		for _, result := range results {
-			assert.False(math.IsNaN(result.Value), "result is NaN")
+			assert.False(math.IsNaN(result.Value))
 
 			assert.True(!income[0].Date.Truncate(util.Day).After(result.Key))
 			assert.True(!result.Key.After(income[len(income)-1].Date.Truncate(util.Day).Add(time.Hour * 24)))

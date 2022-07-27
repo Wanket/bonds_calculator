@@ -15,12 +15,12 @@ func TestCalcUserPercent(t *testing.T) {
 
 	userCalculator := calculator.NewUserCalculator(loadUserBondization(), loadUserBuyHistory())
 	percent, err := userCalculator.CalcUserPercent(calculator.Maturity)
-	assert.NoError(err, "CalcUserPercent calculation error")
+	assert.NoError(err)
 
 	accuracy := 0.01
 	expected := 0.125
 
-	assert.InDelta(expected, percent, accuracy, "CalcUserPercent calculation error")
+	assert.InDelta(expected, percent, accuracy)
 }
 
 func TestCalcUserPercentForOneBond(t *testing.T) {

@@ -41,7 +41,7 @@ func FuzzCalcStatistic(f *testing.F) {
 
 		assert.True(slices.IsSortedFunc(result, func(left, right datastruct.Pair[time.Time, float64]) bool {
 			return left.Key.Sub(right.Key).Hours()/24 < 0
-		}), "result is not sorted")
+		}))
 	})
 }
 
