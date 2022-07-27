@@ -8,6 +8,7 @@ import (
 	mockservice "bonds_calculator/internal/service/mock"
 	"bonds_calculator/internal/util"
 	"bonds_calculator/test"
+	testmoex "bonds_calculator/test/model/moex"
 	"github.com/benbjohnson/clock"
 	"github.com/golang/mock/gomock"
 	"testing"
@@ -117,6 +118,33 @@ func TestStaticCalculatorErrors(t *testing.T) {
 
 	assert.Error(err)
 	assert.Equal(0.0, result)
+}
+
+func BenchmarkStaticCalculator(b *testing.B) {
+	mockController := gomock.NewController(b)
+
+	calc, staticStore, _ := prepareStaticCalculator(mockController)
+
+	bondization := testmoex.LoadParsedBondization()
+
+	staticStore.EXPECT().GetBondization(bondization.ID).AnyTimes().Return(bondization, nil)
+
+	staticStore.EXPECT().GetBondizationsChangedTime().AnyTimes().Return(time.Time{})
+
+	uaeBond := moex.Bond{
+		ID: bondization.ID,
+		MarketDataPart: moex.MarketDataPart{
+			CurrentPricePercent: 10.0,
+		},
+		SecurityPart: moex.SecurityPart{
+			Coupon: 30.0,
+			Value:  30.0,
+		},
+	}
+
+	for i := 0; i < b.N; i++ {
+		_, _ = calc.CalcStaticStatisticForOneBond(uaeBond, calculator.Maturity)
+	}
 }
 
 func prepareStaticCalculator(

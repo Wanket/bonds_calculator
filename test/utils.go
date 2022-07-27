@@ -50,7 +50,7 @@ func isZero[T any](obj any) bool {
 		return true
 	}
 
-	switch reflect.TypeOf(obj).Kind() {
+	switch reflect.TypeOf(obj).Kind() { //nolint:exhaustive
 	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Chan, reflect.Slice:
 		return reflect.ValueOf(obj).IsNil()
 	default:

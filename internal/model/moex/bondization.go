@@ -115,7 +115,7 @@ func CheckCoupons(coupons []Coupon) error {
 
 var errAmortizationValueIsNull = errors.New("amortization value is null")
 
-func ParseBondization(id string, buf []byte) (Bondization, error) {
+func ParseBondization(bondID string, buf []byte) (Bondization, error) {
 	reader := NewReader(bytes.NewReader(buf))
 
 	header := ""
@@ -138,24 +138,10 @@ func ParseBondization(id string, buf []byte) (Bondization, error) {
 			continue
 		}
 
-		item, err := tryParseItem(line)
+		err := parseItemToArray(header, line, &amortizations, &coupons)
 
 		if err != nil {
 			return Bondization{}, err
-		}
-
-		if header == "amortizations" {
-			value, exist := item.Value.Get()
-			if !exist {
-				return Bondization{}, errAmortizationValueIsNull
-			}
-
-			amortizations = append(amortizations, Amortization{
-				Date:  item.Date,
-				Value: value,
-			})
-		} else {
-			coupons = append(coupons, Coupon(item))
 		}
 	}
 
@@ -168,7 +154,7 @@ func ParseBondization(id string, buf []byte) (Bondization, error) {
 	}
 
 	return Bondization{
-		ID:            id,
+		ID:            bondID,
 		Amortizations: amortizations,
 		Coupons:       coupons,
 	}, nil
@@ -177,6 +163,32 @@ func ParseBondization(id string, buf []byte) (Bondization, error) {
 type commonItem struct {
 	Date  time.Time
 	Value datastruct.Optional[float64]
+}
+
+func parseItemToArray(header string, line []string, amortizations *[]Amortization, coupons *[]Coupon) error {
+	item, err := tryParseItem(line)
+
+	if err != nil {
+		return err
+	}
+
+	if header == "amortizations" {
+		value, exist := item.Value.Get()
+		if !exist {
+			return errAmortizationValueIsNull
+		}
+
+		*amortizations = append(*amortizations, Amortization{
+			Date:  item.Date,
+			Value: value,
+		})
+
+		return nil
+	}
+
+	*coupons = append(*coupons, Coupon(item))
+
+	return nil
 }
 
 var errWrongAmortizationDataLineLength = errors.New("wrong amortization data line length")
