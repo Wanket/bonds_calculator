@@ -46,6 +46,13 @@ var (
 	errBondValueLessThanZero               = errors.New("bond value is <= 0")
 	errBondCouponPeriodXorNextCouponIsZero = errors.New("bond coupon period is 0 xor next coupon is zero")
 	errBondPrevPricePercentLessThanZero    = errors.New("bond prev price percent is <= 0")
+
+	errInvalidHeader = errors.New("invalid header")
+
+	errSkip                      = errors.New("need skip this data line")
+	errWrongMarketDataLineLength = errors.New("wrong market data line length")
+
+	errWrongSecurityLineLength = errors.New("wrong security line length")
 )
 
 func (bond *Bond) IsValid() error {
@@ -96,8 +103,6 @@ func ParseBondsCp1251(buf []byte) ([]Bond, error) {
 	return ParseBonds(decoded)
 }
 
-var errInvalidHeader = errors.New("invalid header")
-
 func ParseBonds(buf []byte) ([]Bond, error) {
 	reader := NewReader(bytes.NewReader(buf))
 
@@ -136,11 +141,6 @@ func ParseBonds(buf []byte) ([]Bond, error) {
 
 	return filteredBondListFromMap(resultMap), nil
 }
-
-var (
-	errSkip                      = errors.New("need skip this data line")
-	errWrongMarketDataLineLength = errors.New("wrong market data line length")
-)
 
 func filteredBondListFromMap(resultMap map[string]Bond) []Bond {
 	result := make([]Bond, 0, len(resultMap))
@@ -214,8 +214,6 @@ func tryParseMarketData(line []string) (MarketDataPart, error) {
 
 	return MarketDataPart{currentPrice}, nil
 }
-
-var errWrongSecurityLineLength = errors.New("wrong security line length")
 
 //nolint:funlen,cyclop
 func tryParseSecurity(line []string) (SecurityPart, error) {

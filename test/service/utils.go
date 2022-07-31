@@ -6,6 +6,8 @@ import (
 	testdataloader "github.com/peteole/testdata-loader"
 )
 
+var errTypeIsNotMarshalerUnmarshaler = fmt.Errorf("type is not a easyjson.MarshalerUnmarshaler")
+
 func LoadExpectedJSON[T any](path string) (string, error) {
 	file := testdataloader.GetTestFile(path)
 
@@ -13,7 +15,7 @@ func LoadExpectedJSON[T any](path string) (string, error) {
 
 	marshalerUnmarshaler, is := any(&result).(easyjson.MarshalerUnmarshaler)
 	if !is {
-		panic("T is not a easyjson.MarshalerUnmarshaler")
+		panic(fmt.Errorf("LoadExpectedJSON: %w, type: %T", errTypeIsNotMarshalerUnmarshaler, result))
 	}
 
 	if err := easyjson.Unmarshal(file, marshalerUnmarshaler); err != nil {

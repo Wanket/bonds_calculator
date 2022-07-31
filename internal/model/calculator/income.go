@@ -13,6 +13,11 @@ const (
 	Maturity
 )
 
+var (
+	errNoBuyHistoryWithPositiveCount = errors.New("no buy history with count > 0")
+	errWrongAmortizationsSum         = errors.New("wrong amortizations sum")
+)
+
 type IncomeSetting int
 
 type IncomeCalculator struct {
@@ -26,8 +31,6 @@ func NewIncomeCalculator(bondization *moex.Bondization) IncomeCalculator {
 		Coupons:       bondization.Coupons,
 	}
 }
-
-var errNoBuyHistoryWithPositiveCount = errors.New("no buy history with count > 0")
 
 func (calculator *IncomeCalculator) CalcPercent(buyHistory []db.BuyHistory, setting IncomeSetting) (float64, error) {
 	var (
@@ -52,8 +55,6 @@ func (calculator *IncomeCalculator) CalcPercent(buyHistory []db.BuyHistory, sett
 
 	return percent / float64(sumCount), nil
 }
-
-var errWrongAmortizationsSum = errors.New("wrong amortizations sum")
 
 func (calculator *IncomeCalculator) CalcPercentForOneBuyHistory(
 	buyHistory db.BuyHistory,

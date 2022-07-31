@@ -7,6 +7,11 @@ import (
 	"fmt"
 )
 
+var (
+	errBuyHistoriesByIDNotFound = errors.New("buy histories by bond id not found")
+	errBondByIDNotFound         = errors.New("bond by id not found")
+)
+
 type UserCalculator struct {
 	bonds      map[string]moex.Bondization
 	buyHistory map[string][]db.BuyHistory
@@ -28,8 +33,6 @@ func NewUserCalculator(bonds []moex.Bondization, buyHistory []db.BuyHistory) Use
 		buyHistory: buyHistoryMap,
 	}
 }
-
-var errBuyHistoriesByIDNotFound = errors.New("buy histories by bond id not found")
 
 func (calculator *UserCalculator) CalcUserPercent(setting IncomeSetting) (float64, error) {
 	var buyCount uint
@@ -59,8 +62,6 @@ func (calculator *UserCalculator) CalcUserPercent(setting IncomeSetting) (float6
 
 	return sumPercent / float64(buyCount), nil
 }
-
-var errBondByIDNotFound = errors.New("bond by id not found")
 
 func (calculator *UserCalculator) CalcUserPercentForOneBond(bondID string, setting IncomeSetting) (float64, error) {
 	bond, exist := calculator.bonds[bondID]

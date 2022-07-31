@@ -27,8 +27,8 @@ func NewFiberApp() *fiber.App {
 
 func panicHandler(ctx *fiber.Ctx, err any) {
 	log.WithFields(log.Fields{
-		"error": err,
-		"url":   ctx.Path(),
+		log.ErrorKey: err,
+		"url":        ctx.Path(),
 	}).Error("Fiber: got panic on request")
 }
 

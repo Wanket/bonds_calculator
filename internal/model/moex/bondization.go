@@ -32,6 +32,19 @@ type (
 var (
 	errEmptyBondizationID   = errors.New("empty bondization id")
 	errLastAmortizationDate = errors.New("last amortization date must be equal to end date")
+
+	errEmptyAmortizations    = errors.New("amortizations is empty")
+	errAmortizationsUnsorted = errors.New("amortizations must be sorted")
+	errAmortizationsValue    = errors.New("amortizations value must be > 0")
+
+	errEmptyCoupons    = errors.New("coupons is empty")
+	errCouponsUnsorted = errors.New("coupons must be sorted")
+	errCouponsValue    = errors.New("coupons value must be > 0")
+	errCouponsNan      = errors.New("coupons value must be not NaN")
+
+	errAmortizationValueIsNull = errors.New("amortization value is null")
+
+	errWrongAmortizationDataLineLength = errors.New("wrong amortization data line length")
 )
 
 func (bondization *Bondization) IsValid(endDate time.Time) error {
@@ -54,12 +67,6 @@ func (bondization *Bondization) IsValid(endDate time.Time) error {
 	return nil
 }
 
-var (
-	errEmptyAmortizations    = errors.New("amortizations is empty")
-	errAmortizationsUnsorted = errors.New("amortizations must be sorted")
-	errAmortizationsValue    = errors.New("amortizations value must be > 0")
-)
-
 func CheckAmortizations(amortizations []Amortization) error {
 	if len(amortizations) == 0 {
 		return errEmptyAmortizations
@@ -79,13 +86,6 @@ func CheckAmortizations(amortizations []Amortization) error {
 
 	return nil
 }
-
-var (
-	errEmptyCoupons    = errors.New("coupons is empty")
-	errCouponsUnsorted = errors.New("coupons must be sorted")
-	errCouponsValue    = errors.New("coupons value must be > 0")
-	errCouponsNan      = errors.New("coupons value must be not NaN")
-)
 
 func CheckCoupons(coupons []Coupon) error {
 	if len(coupons) == 0 {
@@ -112,8 +112,6 @@ func CheckCoupons(coupons []Coupon) error {
 
 	return nil
 }
-
-var errAmortizationValueIsNull = errors.New("amortization value is null")
 
 func ParseBondization(bondID string, buf []byte) (Bondization, error) {
 	reader := NewReader(bytes.NewReader(buf))
@@ -190,8 +188,6 @@ func parseItemToArray(header string, line []string, amortizations *[]Amortizatio
 
 	return nil
 }
-
-var errWrongAmortizationDataLineLength = errors.New("wrong amortization data line length")
 
 func tryParseItem(line []string) (commonItem, error) {
 	const commonItemLineSize = 2

@@ -29,7 +29,7 @@ func (controller *SearchController) Search(ctx *fiber.Ctx) error {
 
 	query := ctx.Query("query")
 	if len(query) < minQueryLength {
-		return fiber.NewError(fiber.StatusBadRequest)
+		return ctx.SendStatus(fiber.StatusBadRequest)
 	}
 
 	searchResults := controller.searchService.Search(query)

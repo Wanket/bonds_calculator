@@ -14,7 +14,7 @@ func NewConcurrentBox[T any](value T) ConcurrentBox[T] {
 	}
 }
 
-func (box *ConcurrentBox[T]) SafeRead() T { //nolint:ireturn
+func (box *ConcurrentBox[T]) SafeRead() T { //nolint:nolintlint,ireturn
 	box.lock.RLock()
 
 	value := box.value

@@ -1,17 +1,19 @@
 package util
 
 import (
-	"fmt"
 	"github.com/benbjohnson/clock"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
 const (
-	DayMultiplier = 24
+	DayMultiplier  = 24
+	WeekMultiplier = 7
 )
 
 const (
-	Day = time.Hour * DayMultiplier
+	Day  = time.Hour * DayMultiplier
+	Week = time.Hour * WeekMultiplier
 )
 
 type ITimeHelper interface {
@@ -30,7 +32,7 @@ type TimeHelper struct {
 func NewTimeHelper(clock clock.Clock) *TimeHelper {
 	location, err := time.LoadLocation("Europe/Moscow")
 	if err != nil {
-		panic(fmt.Errorf("failed to load location: %w", err))
+		log.Fatalf("failed to load location: %v", err)
 	}
 
 	_, moexOffset := time.Now().In(location).Zone()

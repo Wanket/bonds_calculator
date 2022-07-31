@@ -10,6 +10,11 @@ import (
 	"time"
 )
 
+var (
+	errBondByIDNotFound        = fmt.Errorf("bond by id not found")
+	errBondizationByIDNotFound = fmt.Errorf("bondization by id not found")
+)
+
 //go:generate go run github.com/golang/mock/mockgen -destination=mock/staticstore_gen.go . IStaticStoreService
 type IStaticStoreService interface {
 	GetBonds() []moex.Bond
@@ -70,8 +75,6 @@ func (staticStore *StaticStoreService) GetBondsWithUpdateTime() ([]moex.Bond, ti
 	return result, updateTime
 }
 
-var errBondByIDNotFound = fmt.Errorf("bond by id not found")
-
 func (staticStore *StaticStoreService) GetBondByID(id string) (moex.Bond, error) {
 	result, exist := staticStore.bondsMap.SafeRead()[id]
 
@@ -81,8 +84,6 @@ func (staticStore *StaticStoreService) GetBondByID(id string) (moex.Bond, error)
 
 	return result, nil
 }
-
-var errBondizationByIDNotFound = fmt.Errorf("bondization by id not found")
 
 func (staticStore *StaticStoreService) GetBondization(id string) (moex.Bondization, error) {
 	result, exist := staticStore.bondizations.SafeRead()[id]

@@ -17,6 +17,17 @@ type ISearchService interface {
 	Search(query string) SearchResults
 }
 
+//easyjson:json
+type SearchResult struct {
+	Bond moex.Bond
+
+	MaturityIncome datastruct.Optional[float64]
+	CurrentIncome  datastruct.Optional[float64]
+}
+
+//easyjson:json
+type SearchResults []SearchResult
+
 type SearchService struct {
 	staticCalculator IStaticCalculatorService
 	staticStore      IStaticStoreService
@@ -42,17 +53,6 @@ func NewSearchService(staticCalculator IStaticCalculatorService, staticStore ISt
 
 	return &service
 }
-
-//easyjson:json
-type SearchResult struct {
-	Bond moex.Bond
-
-	MaturityIncome datastruct.Optional[float64]
-	CurrentIncome  datastruct.Optional[float64]
-}
-
-//easyjson:json
-type SearchResults []SearchResult
 
 func (search *SearchService) Search(query string) SearchResults {
 	if updatedTime := search.searcherUpdatedTime.SafeRead(); updatedTime.Before(search.staticStore.GetBondsChangedTime()) {

@@ -12,6 +12,9 @@ services:
       - redis
       - postgres
     restart: always
+    environment:
+      - CONFIG_DB_HOST=postgres
+      - CONFIG_REDIS_HOST=redis
 
   web-tests:
     build:
@@ -19,13 +22,13 @@ services:
       target: test
 
   redis:
-    image: redis
+    image: redis:7
     restart: always
     ports:
       - "127.0.0.1:6379:6379"
 
   postgres:
-    image: postgres
+    image: postgres:14
     restart: always
     environment:
       POSTGRES_USER: bonds_calculator

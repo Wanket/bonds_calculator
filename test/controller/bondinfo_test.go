@@ -80,7 +80,7 @@ func TestBondInfoErrors(t *testing.T) {
 
 	body, err := io.ReadAll(resp.Body)
 	assert.NoError(err)
-	assert.Equal("test error", string(body))
+	assert.Equal("Not Found", string(body))
 }
 
 func createAndRegisterNewBondInfoController(

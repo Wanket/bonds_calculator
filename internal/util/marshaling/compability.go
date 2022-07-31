@@ -1,14 +1,22 @@
 //nolint:wrapcheck
 package marshaling
 
-import "github.com/mailru/easyjson"
+import (
+	"fmt"
+	"github.com/mailru/easyjson"
+)
+
+var (
+	errTypeIsNotUnmarshaler = fmt.Errorf("type is not a easyjson.Unmarshaler")
+	errTypeIsNotMarshaler   = fmt.Errorf("type is not a easyjson.Marshaler")
+)
 
 func Unmarshal(data []byte, obj interface{}) error {
 	if unmarshaler, is := obj.(easyjson.Unmarshaler); is {
 		return easyjson.Unmarshal(data, unmarshaler)
 	}
 
-	panic("object is not easyjson.Unmarshaler")
+	panic(fmt.Errorf("unmarshal: %w, type: %T", errTypeIsNotUnmarshaler, obj))
 }
 
 func Marshal(obj interface{}) ([]byte, error) {
@@ -16,5 +24,5 @@ func Marshal(obj interface{}) ([]byte, error) {
 		return easyjson.Marshal(marshaler)
 	}
 
-	panic("object is not easyjson.Marshaler")
+	panic(fmt.Errorf("marshal: %w, type: %T", errTypeIsNotMarshaler, obj))
 }

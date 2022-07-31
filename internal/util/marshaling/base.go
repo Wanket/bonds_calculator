@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
-	"reflect"
 )
 
 var errUnsupportedType = fmt.Errorf("unsupported type")
@@ -40,7 +39,7 @@ func MarshalBaseType(t any, writer *jwriter.Writer) { //nolint:cyclop
 	case string:
 		writer.String(obj)
 	default:
-		panic(fmt.Errorf("MarshalBaseType: %w %s", errUnsupportedType, reflect.TypeOf(obj)))
+		panic(fmt.Errorf("MarshalBaseType: %w %T", errUnsupportedType, obj))
 	}
 }
 
@@ -75,6 +74,6 @@ func UnmarshalBaseType(lexer *jlexer.Lexer, out any) { //nolint:cyclop
 	case *string:
 		*obj = lexer.String()
 	default:
-		panic(fmt.Errorf("UnmarshalBaseType: %w %s", errUnsupportedType, reflect.TypeOf(obj)))
+		panic(fmt.Errorf("UnmarshalBaseType: %w %T", errUnsupportedType, obj))
 	}
 }

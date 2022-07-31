@@ -10,6 +10,9 @@ tasks:
     cmds:
       - task: dependencies
       - task: generate
+  lint:
+    cmds:
+      - golangci-lint run
   build:
     cmds:
       - go build -o ./out/bc ./cmd/main.go
