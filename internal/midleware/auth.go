@@ -9,7 +9,7 @@ import (
 
 type AuthMiddleware = fiber.Handler
 
-func NewAuth(auth service.IAuthService, clock clock.Clock) AuthMiddleware {
+func NewAuthMiddleware(auth service.IAuthService, clock clock.Clock) AuthMiddleware {
 	jwtKey := auth.GetSharedSecret()
 
 	return func(ctx *fiber.Ctx) error {

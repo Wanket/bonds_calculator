@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	if err := internal.GetApp().Run(); err != nil {
+	if err := internal.CreateApp().Run(); err != nil {
 		log.WithError(err).Fatal("Application: got fatal error")
 	}
 }

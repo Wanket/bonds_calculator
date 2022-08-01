@@ -67,7 +67,7 @@ You can change project settings by using Shell Enviroments:
   - [ ] Logins count/Tokens count limit
   - [ ] Mail registration/change password notifications
   - [ ] Add Tests
-- [ ] Simplify wire config
+- [x] Simplify wire config
 - [ ] Add fuzz testing to ci
 - [ ] Add coverage to ci
 - [ ] Add User services/controllers
