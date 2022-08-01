@@ -50,9 +50,15 @@ func NewAuthService(
 	config util.IGlobalConfig,
 ) *AuthService {
 	sharedSecret, err := getOrGenerateSharedSecret(tokenRepository)
-	if err != nil {
-		log.Fatalf("AuthService: %v", err)
+	for err != nil {
+		log.WithError(err).Error("AuthService: failed to got shared secret, retrying...")
+
+		time.Sleep(time.Second)
+
+		sharedSecret, err = getOrGenerateSharedSecret(tokenRepository)
 	}
+
+	log.Info("AuthService: got shared secret")
 
 	return &AuthService{
 		tokenRepository: tokenRepository,
@@ -207,7 +213,7 @@ func getOrGenerateSharedSecret(tokenRepository repository.ITokenRepository) ([]b
 		return nil, fmt.Errorf("failed to generate shared secret: %w", err)
 	}
 
-	sharedSecret, err = tokenRepository.SetNXAndGetSharedSecret(sharedSecret)
+	sharedSecret, err = tokenRepository.SetNXAndGetSharedSecret(context.Background(), sharedSecret)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get shared secret: %w", err)
 	}

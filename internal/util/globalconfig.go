@@ -34,9 +34,11 @@ type IGlobalConfig interface {
 const (
 	moexClientQueueSize = "CONFIG_MOEX_CLIENT_QUEUE_SIZE"
 
-	httpPort = "CONFIG_HTTP_PORT"
-
+	httpPort              = "CONFIG_HTTP_PORT"
 	defaultRequestTimeout = "CONFIG_REQUEST_TIMEOUT"
+
+	accessTokenTTL  = "CONFIG_ACCESS_TOKEN_TTL"
+	refreshTokenTTL = "CONFIG_REFRESH_TOKEN_TTL" //nolint:gosec
 
 	dbUser     = "CONFIG_DB_USER"
 	dbPassword = "CONFIG_DB_PASSWORD" //nolint:gosec
@@ -70,8 +72,8 @@ func NewGlobalConfig() *GlobalConfig {
 		moexClientQueueSize:   GetIntEnv(moexClientQueueSize, 10),
 		httpPort:              GetIntEnv(httpPort, 8080),
 		defaultRequestTimeout: GetDurationEnv(defaultRequestTimeout, time.Millisecond*100),
-		accessTokenTTL:        GetDurationEnv("CONFIG_ACCESS_TOKEN_TTL", time.Minute*15),
-		refreshTokenTTL:       GetDurationEnv("CONFIG_REFRESH_TOKEN_TTL", Week),
+		accessTokenTTL:        GetDurationEnv(accessTokenTTL, time.Minute*15),
+		refreshTokenTTL:       GetDurationEnv(refreshTokenTTL, Week),
 		dbConfig: DBConfig{
 			Host:     GetStringEnv(dbHost, "localhost"),
 			Port:     GetIntEnv(dbPort, 5432),

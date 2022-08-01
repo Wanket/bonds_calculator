@@ -2,6 +2,8 @@ package repository
 
 import (
 	"bonds_calculator/internal/data/connection"
+	"bonds_calculator/internal/data/entgenerated"
+	"bonds_calculator/internal/data/entgenerated/secret"
 	"context"
 	"fmt"
 	"time"
@@ -18,16 +20,19 @@ type ITokenRepository interface {
 	StoreToken(ctx context.Context, key string, expirationTime time.Duration) error
 	DeleteToken(ctx context.Context, key string) error
 
-	SetNXAndGetSharedSecret(sharedSecret []byte) ([]byte, error)
+	SetNXAndGetSharedSecret(ctx context.Context, sharedSecret []byte) ([]byte, error)
 }
 
 type TokenRepository struct {
 	BaseRedisRepository
+
+	dbConn *connection.DBConnection
 }
 
-func NewTokenRepository(conn *connection.RedisConnection) *TokenRepository {
+func NewTokenRepository(conn *connection.RedisConnection, dbConnection *connection.DBConnection) *TokenRepository {
 	return &TokenRepository{
 		BaseRedisRepository: NewBaseRedisRepository(conn),
+		dbConn:              dbConnection,
 	}
 }
 
@@ -53,16 +58,20 @@ func (repository *TokenRepository) DeleteToken(ctx context.Context, key string) 
 	return nil
 }
 
-func (repository *TokenRepository) SetNXAndGetSharedSecret(sharedSecret []byte) ([]byte, error) {
-	err := repository.conn.SetNX(context.Background(), sharedSecretKey, sharedSecret, 0).Err()
-	if err != nil {
+func (repository *TokenRepository) SetNXAndGetSharedSecret(ctx context.Context, sharedSecret []byte) ([]byte, error) {
+	err := repository.dbConn.Secret.Create().SetKey(sharedSecretKey).SetValue(sharedSecret).Exec(ctx)
+	if err == nil {
+		return sharedSecret, nil
+	}
+
+	if !entgenerated.IsConstraintError(err) {
 		return nil, fmt.Errorf("failed to set shared secret: %w", err)
 	}
 
-	result, err := repository.conn.Get(context.Background(), sharedSecretKey).Bytes()
+	result, err := repository.dbConn.Secret.Query().Where(secret.Key(sharedSecretKey)).Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get shared secret: %w", err)
 	}
 
-	return result, nil
+	return result.Value, nil
 }

@@ -129,7 +129,7 @@ func newAuthService() *service.AuthService {
 }
 
 func newTokenRepository() *repository.TokenRepository {
-	wire.Build(repository.NewTokenRepository, getSingleRedisConnection)
+	wire.Build(repository.NewTokenRepository, getSingleRedisConnection, getSingleDBConnection)
 
 	return &repository.TokenRepository{}
 }
