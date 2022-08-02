@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"bonds_calculator/internal/api"
 	mockapi "bonds_calculator/internal/api/mock"
 	"bonds_calculator/internal/model/datastruct"
 	"bonds_calculator/internal/model/moex"
@@ -32,7 +33,11 @@ func TestStaticStoreCreating(t *testing.T) {
 
 	mockClient, timerMock, _, timeHelper := prepareStaticStoreDependencies(mockController)
 
+	closedChan := make(chan api.GetBondizationsResult)
+	close(closedChan)
+
 	mockClient.EXPECT().GetBonds().Return([]moex.Bond{}, nil)
+	mockClient.EXPECT().GetBondizationsAsync(gomock.Any()).Return(closedChan)
 
 	timerMock.EXPECT().SubscribeEvery(time.Minute*5, gomock.Any()).Return()
 	timerMock.EXPECT().SubscribeEveryStartFrom(
@@ -58,7 +63,11 @@ func TestStaticStoreBondUpdating(t *testing.T) {
 	timer := service.NewTimerService(clockMock)
 	defer timer.Close()
 
+	closedChan := make(chan api.GetBondizationsResult)
+	close(closedChan)
+
 	mockClient.EXPECT().GetBonds().Return([]moex.Bond{}, nil)
+	mockClient.EXPECT().GetBondizationsAsync([]moex.Bond{}).Return(closedChan)
 
 	store := service.NewStaticStoreService(mockClient, timer, timeHelper)
 
@@ -72,7 +81,6 @@ func TestStaticStoreBondUpdating(t *testing.T) {
 	expectedBonds[1].ShortName = "Second"
 
 	mockClient.EXPECT().GetBonds().Return(expectedBonds, nil)
-	mockClient.EXPECT().GetBondization(gomock.Any()).AnyTimes().Return(moex.Bondization{}, nil)
 
 	runtime.Gosched()
 
@@ -97,8 +105,6 @@ func TestStaticStoreBondizationUpdating(t *testing.T) {
 	useBond[0].ID = "1"
 	useBond[0].EndDate = time.Time{}.AddDate(0, 0, 20)
 
-	mockClient.EXPECT().GetBonds().Return(useBond, nil)
-
 	expectedAmotrizations := []moex.Amortization{
 		{
 			Date:  time.Time{}.AddDate(0, 0, 10),
@@ -121,11 +127,23 @@ func TestStaticStoreBondizationUpdating(t *testing.T) {
 		},
 	}
 
-	mockClient.EXPECT().GetBondization(useBond[0].ID).Return(moex.Bondization{
-		ID:            "1",
-		Amortizations: expectedAmotrizations,
-		Coupons:       expectedCoupons,
-	}, nil)
+	mockChan := make(chan api.GetBondizationsResult, 1)
+	mockChan <- api.GetBondizationsResult{
+		Bondization: moex.Bondization{
+			ID:            "1",
+			Amortizations: expectedAmotrizations,
+			Coupons:       expectedCoupons,
+		},
+		Bond:  useBond[0],
+		Error: nil,
+	}
+
+	mockClient.EXPECT().GetBonds().Return(useBond, nil)
+	mockClient.EXPECT().GetBondizationsAsync(useBond).Return(mockChan)
+
+	go func() {
+		close(mockChan)
+	}()
 
 	store := service.NewStaticStoreService(mockClient, timer, timeHelper)
 
@@ -151,9 +169,23 @@ func TestStaticStoreErrors(t *testing.T) {
 
 	mockClient.EXPECT().GetBonds().Return(useBond, nil)
 
-	for i := 0; i < 6; i++ {
+	mockChan := make(chan api.GetBondizationsResult, 1)
+
+	mockChan <- api.GetBondizationsResult{
+		Bondization: moex.Bondization{},
+		Bond:        useBond[0],
+		Error:       test.ErrTest,
+	}
+
+	mockClient.EXPECT().GetBondizationsAsync(useBond).Return(mockChan)
+
+	for i := 0; i < 5; i++ {
 		mockClient.EXPECT().GetBondization("1").Return(moex.Bondization{}, test.ErrTest)
 	}
+
+	go func() {
+		close(mockChan)
+	}()
 
 	store := service.NewStaticStoreService(mockClient, timer, timeHelper)
 

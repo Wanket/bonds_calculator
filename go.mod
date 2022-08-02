@@ -13,13 +13,13 @@ require (
 	github.com/golangci/golangci-lint v1.47.2
 	github.com/google/gofuzz v1.2.0
 	github.com/google/wire v0.5.0
-	github.com/hymkor/go-lazy v0.0.0-20220318030802-e1f012df1dc1
 	github.com/kataras/jwt v0.1.8
 	github.com/lib/pq v1.10.6
 	github.com/mailru/easyjson v0.7.7
 	github.com/peteole/testdata-loader v0.3.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.0
+	github.com/valyala/fasthttp v1.38.0
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
@@ -184,7 +184,6 @@ require (
 	github.com/ultraware/whitespace v0.0.5 // indirect
 	github.com/uudashr/gocognit v1.0.6 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasthttp v1.38.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/yagipy/maintidx v1.0.0 // indirect
 	github.com/yeya24/promlinter v0.2.0 // indirect

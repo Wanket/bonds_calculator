@@ -145,41 +145,44 @@ func (staticStore *StaticStoreService) reloadBondization() {
 
 	bondizations := make(map[string]moex.Bondization, len(bonds))
 
-	for bondInx, bond := range bonds {
-		bondization, err := staticStore.client.GetBondization(bond.ID)
+	bondInx := -1
+	for bondiztionResult := range staticStore.client.GetBondizationsAsync(bonds) {
+		bondInx++
 
-		for tryCount := 0; err != nil && tryCount < 5; tryCount++ {
+		for tryCount := 0; bondiztionResult.Error != nil && tryCount < 5; tryCount++ {
 			log.WithFields(log.Fields{
-				"bond":       bond,
-				log.ErrorKey: err,
+				"bond":       bondiztionResult.Bond,
+				log.ErrorKey: bondiztionResult.Error,
 				"tryCount":   tryCount,
 			}).Errorf("StaticStoreService: error while updating bondization, retrying...")
 
-			bondization, err = staticStore.client.GetBondization(bond.ID)
+			bondiztionResult.Bondization, bondiztionResult.Error =
+				staticStore.client.GetBondization(bondiztionResult.Bond.ID)
 		}
 
-		if err != nil {
+		if bondiztionResult.Error != nil {
 			log.WithFields(log.Fields{
-				"bond":       bond,
-				log.ErrorKey: err,
+				"bond":       bondiztionResult.Bond,
+				log.ErrorKey: bondiztionResult.Error,
 			}).Errorf("StaticStoreService: error while updating bondization, skipping")
 
 			continue
 		}
 
-		if err := bondization.IsValid(bond.EndDate); err != nil { // impossible cause of tests but just in case
+		// impossible cause of tests but just in case
+		if err := bondiztionResult.Bondization.IsValid(bondiztionResult.Bond.EndDate); err != nil {
 			log.WithFields(log.Fields{
-				"bond":        bond,
-				"bondization": bondization,
+				"bond":        bondiztionResult.Bond,
+				"bondization": bondiztionResult.Bondization,
 				log.ErrorKey:  err,
 			}).Errorf("StaticStoreService: got invalid bondization")
 
 			continue
 		}
 
-		bondizations[bond.ID] = bondization
+		bondizations[bondiztionResult.Bond.ID] = bondiztionResult.Bondization
 
-		if bondInx%200 == 0 {
+		if bondInx%250 == 0 {
 			log.WithField("bondInx", bondInx).Info("StaticStoreService: updating bondizations...")
 		}
 	}

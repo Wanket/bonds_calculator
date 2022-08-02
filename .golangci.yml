@@ -30,7 +30,7 @@ linters-settings:
   exhaustruct:
     exclude:
       - "bonds_calculator/internal/model/moex.*"
-      - "net/http.*"
+      - "fasthttp.*"
       - "github.com/gofiber/fiber/v2.*"
       - "github.com/go-redis/redis/v9.*"
   wrapcheck:
