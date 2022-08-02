@@ -61,7 +61,7 @@ func (controller *PasswordController) ChangePassword(ctx *fiber.Ctx) error {
 	if err != nil {
 		if errors.Is(err, service.ErrMismatchedHashAndPassword) {
 			return ctx.JSON(controllerutil.BaseResult{
-				Status: controllerutil.ResultWrongOldPassword,
+				Status: controllerutil.StatusWrongOldPassword,
 			})
 		}
 
@@ -69,6 +69,6 @@ func (controller *PasswordController) ChangePassword(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(controllerutil.BaseResult{
-		Status: controllerutil.ResultOK,
+		Status: controllerutil.StatusOK,
 	})
 }

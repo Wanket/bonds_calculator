@@ -40,14 +40,6 @@ func (repository *BaseDBRepository) CreateAndSetTx(ctx context.Context) (driver.
 	return transaction, nil
 }
 
-func (repository *BaseDBRepository) Close() error {
-	if err := repository.conn.Close(); err != nil {
-		return fmt.Errorf("failed to close db connection: %w", err)
-	}
-
-	return nil
-}
-
 func withTransaction[IT any](ctx context.Context, repository Repo[IT]) (util.Transaction[IT], error) {
 	transaction, err := repository.CreateAndSetTx(ctx)
 	if err != nil {

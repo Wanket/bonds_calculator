@@ -2,19 +2,19 @@
 package util
 
 const (
-	ResultOK = Result(iota)
+	StatusOK = Status(iota)
 
-	ResultUserAlreadyExists
-	ResultWrongLoginOrPassword
+	StatusUserAlreadyExists
+	StatusWrongLoginOrPassword
 
-	ResultWrongOldPassword
+	StatusWrongOldPassword
 
-	ResultBondNotFound
+	StatusBondNotFound
 )
 
-type Result int
+type Status int
 
 //easyjson:json
 type BaseResult struct {
-	Status Result
+	Status Status
 }

@@ -2,6 +2,7 @@ package controller_test
 
 import (
 	"bonds_calculator/internal/controller"
+	controllerutil "bonds_calculator/internal/controller/util"
 	"bonds_calculator/internal/model/datastruct"
 	"bonds_calculator/internal/model/moex"
 	"bonds_calculator/internal/service"
@@ -11,6 +12,7 @@ import (
 	testservice "bonds_calculator/test/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
+	"github.com/mailru/easyjson"
 	"io"
 	"net/http/httptest"
 	"testing"
@@ -46,7 +48,7 @@ func TestBondInfoSuccess(t *testing.T) {
 	assert.Equal(fiber.StatusOK, resp.StatusCode)
 	assert.Equal("application/json", resp.Header.Get("Content-Type"))
 
-	expected, err := testservice.LoadExpectedJSON[service.BondInfoResult]("test/data/marshaling/bond_info_success.json")
+	expected, err := testservice.LoadExpectedJSON[controller.BondInfoResult]("test/data/marshaling/bond_info_success.json")
 	assert.NoError(err)
 	body, err := io.ReadAll(resp.Body)
 	assert.NoError(err)
@@ -72,15 +74,23 @@ func TestBondInfoErrors(t *testing.T) {
 
 	bondInfoService.EXPECT().GetBondInfo("test_id").Return(service.BondInfoResult{}, test.ErrTest) //nolint:exhaustruct
 
+	expected, err := easyjson.Marshal(controller.BondInfoResult{
+		BaseResult: controllerutil.BaseResult{
+			Status: controllerutil.StatusBondNotFound,
+		},
+		Result: datastruct.Optional[service.BondInfoResult]{},
+	})
+	assert.NoError(err)
+
 	req := httptest.NewRequest("GET", "/api/static/bond_info?id=test_id", nil)
 
 	resp, err := app.Test(req)
 	assert.NoError(err)
-	assert.Equal(fiber.StatusNotFound, resp.StatusCode)
+	assert.Equal(fiber.StatusOK, resp.StatusCode)
 
 	body, err := io.ReadAll(resp.Body)
 	assert.NoError(err)
-	assert.Equal("Not Found", string(body))
+	assert.Equal(string(expected), string(body))
 }
 
 func createAndRegisterNewBondInfoController(

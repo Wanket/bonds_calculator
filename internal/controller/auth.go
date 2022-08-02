@@ -49,7 +49,7 @@ func (controller *AuthController) Register(ctx *fiber.Ctx) error {
 	if err != nil {
 		if errors.Is(err, repository.ErrUserAlreadyExists) {
 			return ctx.JSON(controllerutil.BaseResult{
-				Status: controllerutil.ResultUserAlreadyExists,
+				Status: controllerutil.StatusUserAlreadyExists,
 			})
 		}
 
@@ -73,7 +73,7 @@ func (controller *AuthController) Login(ctx *fiber.Ctx) error {
 	if err != nil {
 		if errors.Is(err, service.ErrMismatchedHashAndPassword) {
 			return ctx.JSON(controllerutil.BaseResult{
-				Status: controllerutil.ResultWrongLoginOrPassword,
+				Status: controllerutil.StatusWrongLoginOrPassword,
 			})
 		}
 

@@ -43,7 +43,7 @@ func (controller *BondInfoController) GetBondInfo(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.JSON(BondInfoResult{
 			BaseResult: controllerutil.BaseResult{
-				Status: controllerutil.ResultBondNotFound,
+				Status: controllerutil.StatusBondNotFound,
 			},
 			Result: datastruct.Optional[service.BondInfoResult]{},
 		})
@@ -51,7 +51,7 @@ func (controller *BondInfoController) GetBondInfo(ctx *fiber.Ctx) error {
 
 	return ctx.JSON(BondInfoResult{
 		BaseResult: controllerutil.BaseResult{
-			Status: controllerutil.ResultOK,
+			Status: controllerutil.StatusOK,
 		},
 		Result: datastruct.NewOptional(bondInfo),
 	})

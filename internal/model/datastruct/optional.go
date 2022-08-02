@@ -57,7 +57,7 @@ func (optional *Optional[T]) UnmarshalEasyJSON(lexer *jlexer.Lexer) {
 		return
 	}
 
-	if unmarshaler, is := any(optional.val).(easyjson.Unmarshaler); is {
+	if unmarshaler, is := any(&optional.val).(easyjson.Unmarshaler); is {
 		unmarshaler.UnmarshalEasyJSON(lexer)
 	} else {
 		marshaling.UnmarshalBaseType(lexer, &optional.val)

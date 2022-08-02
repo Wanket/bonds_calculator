@@ -56,6 +56,6 @@ func (controller *JWTController) sendJWTCookie(ctx *fiber.Ctx, username string, 
 	ctx.Cookie(&accessCookie)
 
 	return ctx.JSON(controllerutil.BaseResult{
-		Status: controllerutil.ResultOK,
+		Status: controllerutil.StatusOK,
 	})
 }
