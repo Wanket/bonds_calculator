@@ -19,6 +19,7 @@ docker compose -f docker-compose.yml up web-tests --exit-code-from web-tests
 ```
 
 You can run project without docker using `go run ./...` or run tests using `go test -v ./...` but make sure you configured all dependencies by yourself:
+- generate code using `go generate` commands
 - run postgres server
 - run redis server
 - move [bonds_calculator_client](https://github.com/Wanket/bonds_calculator_client) build artefacts to ./public folder
