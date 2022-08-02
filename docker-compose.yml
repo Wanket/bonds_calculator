@@ -21,6 +21,11 @@ services:
       context: .
       target: test
 
+  web-tests-ci:
+    build:
+      context: .
+      target: test-ci
+
   redis:
     image: redis:7
     restart: always

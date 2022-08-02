@@ -20,6 +20,9 @@ tasks:
   test:
     cmds:
       - CGO_ENABLED=0 GOOS=linux go test -v ./...
+  test-ci:
+    cmds:
+      - CI=true CGO_ENABLED=0 GOOS=linux go test -v ./...
   run:
     cmds:
       - go run ./...

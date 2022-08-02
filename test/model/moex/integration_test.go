@@ -3,10 +3,15 @@ package moex_test
 import (
 	"bonds_calculator/internal/api"
 	"bonds_calculator/test"
+	"os"
 	"testing"
 )
 
 func TestBondNullFields(t *testing.T) {
+	if _, exist := os.LookupEnv("CI"); exist {
+		t.Skip("Moex integration tests is unstable in GitHub Actions")
+	}
+
 	assert, _ := test.PrepareTest(t)
 
 	client := api.NewMoexClient(1)
@@ -21,6 +26,10 @@ func TestBondNullFields(t *testing.T) {
 }
 
 func TestLoadAllBondizations(t *testing.T) {
+	if _, exist := os.LookupEnv("CI"); exist {
+		t.Skip("Moex integration tests is unstable in GitHub Actions")
+	}
+
 	assert, _ := test.PrepareTest(t)
 
 	client := api.NewMoexClient(10)

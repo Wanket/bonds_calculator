@@ -17,4 +17,4 @@ jobs:
       with:
         submodules: recursive
     - name: Build the Docker image
-      run: docker compose up web-tests --exit-code-from web-tests
+      run: docker compose up web-tests-ci --exit-code-from web-tests-ci

@@ -17,6 +17,9 @@ RUN task prepare
 FROM server as test
 CMD ["task", "test"]
 
+FROM server as test-ci
+CMD ["task", "test-ci"]
+
 FROM server as run
 RUN task build
 
